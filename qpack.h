@@ -13,10 +13,22 @@
 
 #define QP_SUGGESTED_SIZE 65536
 
+#define QP_ERR_ALLOC -1
+#define QP_ERR_CORRUPT -2
+
 typedef union qp_via_u qp_via_t;
+typedef union qp_res_u qp_res_via_t;
+
 typedef struct qp_obj_s qp_obj_t;
 typedef struct qp_packer_s qp_packer_t;
 typedef struct qp_unpacker_s qp_unpacker_t;
+typedef struct qp_res_s qp_res_t;
+typedef struct qp_map_s qp_map_t;
+typedef struct qp_array_s qp_array_t;
+
+typedef enum qp_res_e qp_res_tp;
+typedef enum qp_err_e qp_err_t;
+typedef enum qp_types_e qp_types_t;
 
 enum
 {
@@ -69,12 +81,13 @@ enum
     QP__MAP_CLOSE,       // close map
 };
 
-typedef enum {
+enum qp_err_e
+{
     QP_ERR_MEMORY_ALLOCATION=-100,
     QP_ERR_NO_OPEN_ARRAY,
     QP_ERR_NO_OPEN_MAP,
     QP_ERR_MISSING_VALUE,
-} qp_err_t;
+};
 
 union qp_via_u
 {
@@ -88,6 +101,48 @@ struct qp_obj_s
     uint8_t tp;
     size_t len;
     qp_via_t via;
+};
+
+
+enum qp_res_e
+{
+    QP_RES_MAP,
+    QP_RES_ARRAY,
+    QP_RES_INT64,
+    QP_RES_REAL,
+    QP_RES_STR,
+    QP_RES_BOOL,
+    QP_RES_NULL,
+};
+
+struct qp_map_s
+{
+    size_t n;
+    qp_res_t * keys;
+    qp_res_t * values;
+};
+
+struct qp_array_s
+{
+    size_t n;
+    qp_res_t * values;
+};
+
+union qp_res_u
+{
+    qp_map_t map;
+    qp_array_t array;
+    char * str;
+    int64_t int64;
+    double real;
+    int bool;
+    void * null;
+};
+
+struct qp_res_s
+{
+    qp_res_tp tp;
+    qp_res_via_t via;
 };
 
 enum qp__nest_types
@@ -121,7 +176,7 @@ struct qp_unpacker_s
     const unsigned char * end;
 };
 
-typedef enum
+enum qp_types_e
 {
     QP_END=QP__END,
     QP_ERR,
@@ -148,7 +203,9 @@ typedef enum
     QP_MAP_OPEN,        // open a new map
     QP_ARRAY_CLOSE,     // close array
     QP_MAP_CLOSE,       // close map
-} qp_types_t;
+};
+
+
 
 /* create and destroy functions */
 qp_packer_t * qp_packer_create(size_t alloc_size);
@@ -176,6 +233,20 @@ void qp_unpacker_init(
 
 /* step over an unpacker */
 qp_types_t qp_next(qp_unpacker_t * unpacker, qp_obj_t * qp_obj);
+
+/* unpack all */
+int qp_unpacker_res(qp_unpacker_t * unpacker, qp_res_t ** res);
+void qp_res_destroy(qp_res_t * res);
+
+/* test functions */
+extern int qp_is_array(qp_types_t tp);
+extern int qp_is_map(qp_types_t tp);
+extern int qp_is_close(qp_types_t tp);
+extern int qp_is_raw(qp_types_t tp);
+extern int qp_is_int(qp_types_t tp);
+extern int qp_is_double(qp_types_t tp);
+extern int qp_is_raw_term(qp_obj_t * qp_obj);
+extern int qp_is_raw_equal(qp_obj_t * obj, const char * str);
 
 /* print */
 void qp_print(const unsigned char * pt, size_t len);

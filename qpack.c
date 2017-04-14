@@ -12,6 +12,7 @@
 #include <stdio.h>
 
 #define QP__INITIAL_NEST_SIZE 2
+#define QP__INITIAL_ALLOC_SZ 8
 
 #define QP__RETURN_INC_C                                                \
     if (packer->depth) packer->nesting[packer->depth - 1].n++;          \
@@ -113,6 +114,8 @@ static qp_types_t QP_print_unpacker(
         qp_types_t tp,
         qp_unpacker_t * unpacker,
         qp_obj_t * qp_obj);
+static int QP_res(qp_unpacker_t * unpacker, qp_res_t * res, qp_obj_t * val);
+static void QP_res_destroy(qp_res_t * res);
 
 qp_packer_t * qp_packer_create(size_t alloc_size)
 {
@@ -724,6 +727,100 @@ qp_types_t qp_next(qp_unpacker_t * unpacker, qp_obj_t * qp_obj)
     return QP_ERR;
 }
 
+
+inline int qp_is_array(qp_types_t tp)
+{
+    return tp == QP_ARRAY_OPEN || (tp >= QP_ARRAY0 && tp <= QP_ARRAY5);
+}
+
+inline int qp_is_map(qp_types_t tp)
+{
+    return tp == QP_MAP_OPEN || (tp >= QP_MAP0 && tp <= QP_MAP5);
+}
+
+inline int qp_is_close(qp_types_t tp)
+{
+    return tp >= QP_ARRAY_CLOSE;
+}
+
+inline int qp_is_raw(qp_types_t tp)
+{
+    return tp == QP_RAW;
+}
+
+inline int qp_is_int(qp_types_t tp)
+{
+    return tp == QP_INT64;
+}
+
+inline int qp_is_double(qp_types_t tp)
+{
+    return tp == QP_DOUBLE;
+}
+
+inline int qp_is_raw_term(qp_obj_t * qp_obj)
+{
+    return (qp_obj->tp == QP_RAW &&
+            qp_obj->len &&
+            qp_obj->via.raw[qp_obj->len - 1] == '\0');
+}
+
+inline int qp_raw_is_equal(qp_obj_t * obj, const char * str)
+{
+    return
+        strlen(str) == obj->len &&
+        strncmp(obj->via.raw, str, obj->len) == 0;
+}
+
+
+void qp_res_destroy(qp_res_t * res)
+{
+    QP_res_destroy(res);
+    free(res);
+}
+
+int qp_unpacker_res(qp_unpacker_t * unpacker, qp_res_t ** res)
+{
+    int rc;
+    qp_res_t * rs;
+    qp_types_t tp;
+    qp_obj_t val;
+
+    /* make sure we are at start */
+    unpacker->pt = unpacker->start;
+
+
+    tp = qp_next(unpacker, &val);
+    if (tp == QP_END ||
+        tp == QP_ERR ||
+        tp == QP_HOOK ||
+        tp == QP_ARRAY_CLOSE ||
+        tp == QP_MAP_CLOSE)
+    {
+        return QP_ERR_CORRUPT;
+    }
+
+    rs = (qp_res_t *) malloc(sizeof(qp_res_t));
+
+    if (rs == NULL)
+    {
+        return QP_ERR_ALLOC;
+    }
+
+    rc = QP_res(unpacker, rs, &val);
+
+    if (rc)
+    {
+        qp_res_destroy(rs);
+    }
+    else
+    {
+        *res = rs;
+    }
+
+    return rc;
+}
+
 void qp_print(const unsigned char * pt, size_t len)
 {
     qp_obj_t qp_obj;
@@ -832,4 +929,338 @@ static qp_types_t QP_print_unpacker(
         break;
     }
     return qp_next(unpacker, qp_obj);
+}
+
+static int QP_res(qp_unpacker_t * unpacker, qp_res_t * res, qp_obj_t * val)
+{
+    int rc;
+    size_t i, n, m;
+    qp_types_t tp;
+    qp_res_t * tmp;
+
+    switch((qp_types_t) val->tp)
+    {
+    case QP_RAW:
+        res->tp = QP_RES_STR;
+        res->via.str = strndup(val->via.raw, val->len);
+        return (res->via.str == NULL) ? QP_ERR_ALLOC : 0;
+    case QP_HOOK:
+        /* hooks are not implemented yet */
+        return QP_ERR_CORRUPT;
+    case QP_INT64:
+        res->tp = QP_RES_INT64;
+        res->via.int64 = val->via.int64;
+        return 0;
+    case QP_DOUBLE:
+        res->tp = QP_RES_REAL;
+        res->via.real = val->via.real;
+        return 0;
+    case QP_ARRAY0:
+    case QP_ARRAY1:
+    case QP_ARRAY2:
+    case QP_ARRAY3:
+    case QP_ARRAY4:
+    case QP_ARRAY5:
+        res->tp = QP_RES_ARRAY;
+        n = val->tp - QP_ARRAY0;
+        res->via.array.n = n;
+        res->via.array.values = (qp_res_t *) malloc(sizeof(qp_res_t) * n);
+
+        if (!n)
+        {
+            return 0;
+        }
+
+        if (res->via.array.values == NULL)
+        {
+            res->via.array.n = 0;
+            return QP_ERR_ALLOC;
+        }
+
+        for (i = 0; i < n; i++)
+        {
+            tp = qp_next(unpacker, val);
+
+            if (tp == QP_END ||
+                tp == QP_ERR ||
+                tp == QP_HOOK ||
+                tp == QP_ARRAY_CLOSE ||
+                tp == QP_MAP_CLOSE)
+            {
+                res->via.array.n = i;
+                return QP_ERR_CORRUPT;
+            }
+
+            if ((rc = QP_res(unpacker, res->via.array.values + i, val)))
+            {
+                res->via.array.n = i + 1;
+                return rc;
+            }
+        }
+        return 0;
+    case QP_MAP0:
+    case QP_MAP1:
+    case QP_MAP2:
+    case QP_MAP3:
+    case QP_MAP4:
+    case QP_MAP5:
+        res->tp = QP_RES_MAP;
+        n = val->tp - QP_MAP0;
+        res->via.map.n = n;
+        res->via.map.keys = (qp_res_t *) malloc(sizeof(qp_res_t) * n);
+        res->via.map.values = (qp_res_t *) malloc(sizeof(qp_res_t) * n);
+
+        if (!n)
+        {
+            return 0;
+        }
+
+        if (res->via.map.keys == NULL || res->via.map.values == NULL)
+        {
+            res->via.map.n = 0;
+            return QP_ERR_ALLOC;
+        }
+
+        for (i = 0; i < n; i++)
+        {
+            int kv = 2;
+
+            while (kv--)
+            {
+                tp = qp_next(unpacker, val);
+
+                if (tp == QP_END ||
+                    tp == QP_ERR ||
+                    tp == QP_HOOK ||
+                    tp == QP_ARRAY_CLOSE ||
+                    tp == QP_MAP_CLOSE)
+                {
+                    res->via.map.n = i;
+                    if (!kv)
+                    {
+                        QP_res_destroy(res->via.map.keys + i);
+                    }
+                    return QP_ERR_CORRUPT;
+                }
+
+                if ((rc = QP_res(
+                        unpacker,
+                        (kv) ? res->via.map.keys + i : res->via.map.values + i,
+                        val)))
+                {
+                    res->via.map.n = i + 1;
+                    return rc;
+                }
+            }
+        }
+        return 0;
+    case QP_TRUE:
+    case QP_FALSE:
+        res->tp = QP_RES_BOOL;
+        res->via.bool = (val->tp == QP_TRUE);
+        return 0;
+    case QP_NULL:
+        res->tp = QP_RES_NULL;
+        res->via.null = NULL;
+        return 0;
+    case QP_ARRAY_OPEN:
+        res->tp = QP_RES_ARRAY;
+
+        n = 0;
+        res->via.array.n = 0;
+        res->via.array.values = NULL;
+
+        for (i = 0;; i++)
+        {
+
+            tp = qp_next(unpacker, val);
+
+            if (tp == QP_END || tp == QP_ARRAY_CLOSE)
+            {
+                break;
+            }
+
+            if (tp == QP_ERR || tp == QP_HOOK || tp == QP_MAP_CLOSE)
+            {
+                return QP_ERR_CORRUPT;
+            }
+
+            res->via.array.n++;
+
+            if (res->via.array.n > n)
+            {
+                n = (n) ? n * 2: QP__INITIAL_ALLOC_SZ;
+
+                tmp = (qp_res_t *) realloc(
+                        res->via.array.values,
+                        sizeof(qp_res_t) * n);
+
+                if (tmp == NULL)
+                {
+                    res->via.array.n--;
+                    return QP_ERR_ALLOC;
+                }
+
+                res->via.array.values = tmp;
+            }
+
+            if ((rc = QP_res(unpacker, res->via.array.values + i, val)))
+            {
+                return rc;
+            }
+        }
+
+        if (n > res->via.array.n)
+        {
+            tmp = (qp_res_t *) realloc(
+                    res->via.array.values,
+                    sizeof(qp_res_t) * res->via.array.n);
+
+            if (tmp == NULL)
+            {
+                return QP_ERR_ALLOC;
+            }
+
+            res->via.array.values = tmp;
+        }
+
+        return 0;
+    case QP_MAP_OPEN:
+        res->tp = QP_RES_MAP;
+
+        n = 0;
+        m = 0;
+        res->via.map.n = 0;
+        res->via.map.keys = NULL;
+        res->via.map.values = NULL;
+
+        for (i = 0;; i++)
+        {
+            int kv = 2;
+
+            while (kv--)
+            {
+                qp_res_t ** rs;
+                size_t * sz;
+                tp = qp_next(unpacker, val);
+
+                if (kv)
+                {
+                    if (tp == QP_END || tp == QP_MAP_CLOSE)
+                    {
+                        break;
+                    }
+
+                    if (tp == QP_ERR ||
+                        tp == QP_HOOK ||
+                        tp == QP_ARRAY_CLOSE)
+                    {
+                        return QP_ERR_CORRUPT;
+                    }
+                    res->via.map.n++;
+                    rs = &res->via.map.keys;
+                    sz = &n;
+                }
+                else
+                {
+                    if (tp == QP_END ||
+                        tp == QP_ERR ||
+                        tp == QP_HOOK ||
+                        tp == QP_ARRAY_CLOSE ||
+                        tp == QP_MAP_CLOSE)
+                    {
+                        res->via.map.n--;
+                        QP_res_destroy(res->via.map.keys + i);
+                        return QP_ERR_CORRUPT;
+                    }
+                    rs = &res->via.map.values;
+                    sz = &m;
+                }
+
+                if (res->via.map.n > *sz)
+                {
+                    *sz = (*sz) ? *sz * 2: QP__INITIAL_ALLOC_SZ;
+
+                    tmp = (qp_res_t *) realloc(*rs, sizeof(qp_res_t) * *sz);
+
+                    if (tmp == NULL)
+                    {
+                        res->via.map.n--;
+                        if (!kv)
+                        {
+                            QP_res_destroy(res->via.map.keys + i);
+                        }
+                        return QP_ERR_ALLOC;
+                    }
+
+                    *rs = tmp;
+                }
+
+                if ((rc = QP_res(unpacker, (*rs) + i, val)))
+                {
+                    if (kv)
+                    {
+                        res->via.map.n--;
+                        QP_res_destroy(res->via.map.keys + i);
+                    }
+                    return rc;
+                }
+            }
+        }
+
+        if (n > res->via.map.n)
+        {
+            tmp = (qp_res_t *) realloc(
+                    res->via.map.keys,
+                    sizeof(qp_res_t) * res->via.map.n);
+            if (tmp == NULL)
+            {
+                return QP_ERR_ALLOC;
+            }
+            res->via.map.keys = tmp;
+
+            tmp = (qp_res_t *) realloc(
+                    res->via.map.values,
+                    sizeof(qp_res_t) * res->via.map.n);
+            if (tmp == NULL)
+            {
+                return QP_ERR_ALLOC;
+            }
+            res->via.map.values = tmp;
+        }
+
+        return 0;
+    default:
+        res->tp = QP_RES_NULL;
+        return QP_ERR_CORRUPT;
+    }
+}
+
+static void QP_res_destroy(qp_res_t * res)
+{
+    int i;
+    switch(res->tp)
+    {
+    case QP_RES_ARRAY:
+        for (i = 0; i < res->via.array.n; i++)
+        {
+            QP_res_destroy(res->via.array.values + i);
+        }
+        free(res->via.array.values);
+        break;
+    case QP_RES_STR:
+        free(res->via.str);
+        break;
+    case QP_RES_MAP:
+        for (i = 0; i < res->via.map.n; i++)
+        {
+            QP_res_destroy(res->via.map.keys + i);
+            QP_res_destroy(res->via.map.values + i);
+        }
+        free(res->via.map.keys);
+        free(res->via.map.values);
+        break;
+    default:
+        break;
+    }
 }
