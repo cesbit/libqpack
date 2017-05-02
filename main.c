@@ -20,19 +20,19 @@ int main(void)
     puts("Start QPack library test...");
 
     packer = qp_packer_create(QP_SUGGESTED_SIZE);
-    qp_add_array(&packer);
+    qp_add_map(&packer);
     qp_add_raw(packer, "Hi Qpack", strlen("Hi Qpack"));
     qp_add_int64(packer, 9);
     qp_add_int64(packer, -79);
     qp_add_int64(packer, -1);
     qp_add_int64(packer, 123456789);
     qp_add_double(packer, 123.456);
-    qp_close_array(packer);
+    qp_close_map(packer);
     qp_packer_print(packer);
 
     qp_unpacker_init(&unpacker, packer->buffer, packer->len);
 
-    rc = qp_unpacker_res(&unpacker, &res);
+    res = qp_unpacker_res(&unpacker, &rc);
 
     if (rc == 0)
     {

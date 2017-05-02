@@ -130,8 +130,8 @@ struct qp_array_s
 
 union qp_res_u
 {
-    qp_map_t map;
-    qp_array_t array;
+    qp_map_t * map;
+    qp_array_t * array;
     char * str;
     int64_t int64;
     double real;
@@ -235,7 +235,7 @@ void qp_unpacker_init(
 qp_types_t qp_next(qp_unpacker_t * unpacker, qp_obj_t * qp_obj);
 
 /* unpack all */
-int qp_unpacker_res(qp_unpacker_t * unpacker, qp_res_t ** res);
+qp_res_t * qp_unpacker_res(qp_unpacker_t * unpacker, int * rc);
 void qp_res_destroy(qp_res_t * res);
 
 /* test functions */
