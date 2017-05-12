@@ -205,8 +205,6 @@ enum qp_types_e
     QP_MAP_CLOSE,       // close map
 };
 
-
-
 /* create and destroy functions */
 qp_packer_t * qp_packer_create(size_t alloc_size);
 void qp_packer_destroy(qp_packer_t * packer);
