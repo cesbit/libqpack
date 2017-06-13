@@ -792,6 +792,8 @@ void qp_res_destroy(qp_res_t * res)
 
 qp_res_t * qp_unpacker_res(qp_unpacker_t * unpacker, int * rc)
 {
+    int fallb;
+    int * rcode = (rc == NULL) ? &fallb : rc;
     qp_res_t * res;
     qp_types_t tp;
     qp_obj_t val;
@@ -806,7 +808,7 @@ qp_res_t * qp_unpacker_res(qp_unpacker_t * unpacker, int * rc)
         tp == QP_ARRAY_CLOSE ||
         tp == QP_MAP_CLOSE)
     {
-        *rc = QP_ERR_CORRUPT;
+        *rcode = QP_ERR_CORRUPT;
         return NULL;
     }
 
@@ -814,13 +816,13 @@ qp_res_t * qp_unpacker_res(qp_unpacker_t * unpacker, int * rc)
 
     if (res == NULL)
     {
-        *rc = QP_ERR_ALLOC;
+        *rcode = QP_ERR_ALLOC;
     }
     else
     {
-        *rc = QP_res(unpacker, res, &val);
+        *rcode = QP_res(unpacker, res, &val);
 
-        if (*rc)
+        if (*rcode)
         {
             qp_res_destroy(res);
             res = NULL;
