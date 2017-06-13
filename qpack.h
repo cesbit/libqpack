@@ -8,6 +8,8 @@
 #ifndef QPACK_H_
 #define QPACK_H_
 
+#define QP_VERSION "1.0.0"
+
 #include <inttypes.h>
 #include <stddef.h>
 
@@ -30,6 +32,7 @@ typedef enum qp_res_e qp_res_tp;
 typedef enum qp_err_e qp_err_t;
 typedef enum qp_types_e qp_types_t;
 
+/* private typemap */
 enum
 {
     QP__END,             // at the end while unpacking
@@ -81,12 +84,53 @@ enum
     QP__MAP_CLOSE,       // close map
 };
 
+/* enums */
 enum qp_err_e
 {
     QP_ERR_MEMORY_ALLOCATION=-100,
     QP_ERR_NO_OPEN_ARRAY,
     QP_ERR_NO_OPEN_MAP,
     QP_ERR_MISSING_VALUE,
+};
+
+enum qp_res_e
+{
+    QP_RES_MAP,
+    QP_RES_ARRAY,
+    QP_RES_INT64,
+    QP_RES_REAL,
+    QP_RES_STR,
+    QP_RES_BOOL,
+    QP_RES_NULL,
+};
+
+enum qp_types_e
+{
+    QP_END=QP__END,
+    QP_ERR,
+    QP_RAW,
+    QP_HOOK=QP__HOOK,
+    QP_INT64=QP__INT64, // 8 bytes signed integer
+    QP_DOUBLE,          // 8 bytes double
+    QP_ARRAY0,          // empty array
+    QP_ARRAY1,          // array with 1 item
+    QP_ARRAY2,          // array with 2 items
+    QP_ARRAY3,          // array with 3 items
+    QP_ARRAY4,          // array with 4 items
+    QP_ARRAY5,          // array with 5 items
+    QP_MAP0,            // empty map
+    QP_MAP1,            // map with 1 item
+    QP_MAP2,            // map with 2 items
+    QP_MAP3,            // map with 3 items
+    QP_MAP4,            // map with 4 items
+    QP_MAP5,            // map with 5 items
+    QP_TRUE,            // boolean true
+    QP_FALSE,           // boolean false
+    QP_NULL,            // null (none, nil)
+    QP_ARRAY_OPEN,      // open a new array
+    QP_MAP_OPEN,        // open a new map
+    QP_ARRAY_CLOSE,     // close array
+    QP_MAP_CLOSE,       // close map
 };
 
 union qp_via_u
@@ -101,18 +145,6 @@ struct qp_obj_s
     uint8_t tp;
     size_t len;
     qp_via_t via;
-};
-
-
-enum qp_res_e
-{
-    QP_RES_MAP,
-    QP_RES_ARRAY,
-    QP_RES_INT64,
-    QP_RES_REAL,
-    QP_RES_STR,
-    QP_RES_BOOL,
-    QP_RES_NULL,
 };
 
 struct qp_map_s
@@ -176,38 +208,13 @@ struct qp_unpacker_s
     const unsigned char * end;
 };
 
-enum qp_types_e
-{
-    QP_END=QP__END,
-    QP_ERR,
-    QP_RAW,
-    QP_HOOK=QP__HOOK,
-    QP_INT64=QP__INT64, // 8 bytes signed integer
-    QP_DOUBLE,          // 8 bytes double
-    QP_ARRAY0,          // empty array
-    QP_ARRAY1,          // array with 1 item
-    QP_ARRAY2,          // array with 2 items
-    QP_ARRAY3,          // array with 3 items
-    QP_ARRAY4,          // array with 4 items
-    QP_ARRAY5,          // array with 5 items
-    QP_MAP0,            // empty map
-    QP_MAP1,            // map with 1 item
-    QP_MAP2,            // map with 2 items
-    QP_MAP3,            // map with 3 items
-    QP_MAP4,            // map with 4 items
-    QP_MAP5,            // map with 5 items
-    QP_TRUE,            // boolean true
-    QP_FALSE,           // boolean false
-    QP_NULL,            // null (none, nil)
-    QP_ARRAY_OPEN,      // open a new array
-    QP_MAP_OPEN,        // open a new map
-    QP_ARRAY_CLOSE,     // close array
-    QP_MAP_CLOSE,       // close map
-};
-
 /* create and destroy functions */
 qp_packer_t * qp_packer_create(size_t alloc_size);
 void qp_packer_destroy(qp_packer_t * packer);
+
+/* misc functions */
+const char * qp_strerror(int err_code);
+const char * qp_version(void);
 
 /* add to packer functions */
 int qp_add_raw(qp_packer_t * packer, const char * raw, size_t len);
@@ -251,6 +258,5 @@ void qp_print(const unsigned char * pt, size_t len);
 #define qp_packer_print(packer) qp_print(packer->buffer, packer->len)
 #define qp_unpacker_print(unpacker) \
     qp_print(unpacker->start, unpacker->end - unpacker->start)
-
 
 #endif /* QPACK_H_ */

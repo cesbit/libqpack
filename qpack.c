@@ -148,6 +148,17 @@ void qp_packer_destroy(qp_packer_t * packer)
     free(packer);
 }
 
+const char * qp_strerror(int err_code)
+{
+    switch (err_code)
+    {
+    case 0:                 return "success";
+    case QP_ERR_ALLOC:      return "memory allocation error";
+    case QP_ERR_CORRUPT:    return "data is invalid or corrupt";
+    default:                return "unknown error code";
+    }
+}
+
 int qp_add_raw(qp_packer_t * packer, const char * raw, size_t len)
 {
     size_t required_size = len + 9;

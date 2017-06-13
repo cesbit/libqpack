@@ -19,22 +19,22 @@ endif
 
 -include ../makefile.defs
 
-# Add inputs and outputs from these tool invocations to the build variables 
+# Add inputs and outputs from these tool invocations to the build variables
 
 # All Target
-all: libqpack-c.so
+all: libqpack.so
 
 # Tool invocations
-libqpack-c.so: $(OBJS) $(USER_OBJS)
+libqpack.so: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: Cross GCC Linker'
-	gcc -shared -o "libqpack-c.so" $(OBJS) $(USER_OBJS) $(LIBS)
+	gcc -shared -o "libqpack.so" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) $(LIBRARIES)$(OBJS)$(C_DEPS) libqpack-c.so
+	-$(RM) $(LIBRARIES)$(OBJS)$(C_DEPS) libqpack.so
 	-@echo ' '
 
 .PHONY: all clean dependents
