@@ -165,6 +165,11 @@ const char * qp_strerror(int err_code)
     }
 }
 
+inline const char * qp_version(void)
+{
+    return QP_VERSION;
+}
+
 int qp_add_raw(qp_packer_t * packer, const char * raw, size_t len)
 {
     size_t required_size = len + 9;

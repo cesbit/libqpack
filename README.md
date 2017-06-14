@@ -350,9 +350,47 @@ Object is accesible via [qp_res_t.via.array](#qp_res_t).
 - `size_t qp_map_t.n`: Number of values in the array (readonly)
 - `qp_res_t * qp_map_t.values`: Values (readonly)
 
+### `qp_obj_t`
+Object is used together with the `qp_next()` function and *can* point to
+data from an unpacker object.
+
+*Public members*
+- `uint8_t qp_obj_t.tp`: Type for the object (readonly)
+  - `QP_END`            // equal to 0 and indicates end of data
+  - QP_ERR            // error while reading unpacker
+  - QP_RAW            // raw data
+  - QP_HOOK           // hook for custom implementations
+  - QP_INT64          // signed 64bit interger
+  - QP_DOUBLE         // double value
+  - QP_ARRAY0         // empty array
+  - QP_ARRAY1         // array with 1 item
+  - QP_ARRAY2         // array with 2 items
+  - QP_ARRAY3         // array with 3 items
+  - QP_ARRAY4         // array with 4 items
+  - QP_ARRAY5         // array with 5 items
+  - QP_MAP0           // empty map
+  - QP_MAP1           // map with 1 item
+  - QP_MAP2           // map with 2 items
+  - QP_MAP3           // map with 3 items
+  - QP_MAP4           // map with 4 items
+  - QP_MAP5           // map with 5 items
+  - QP_TRUE           // boolean true
+  - QP_FALSE          // boolean false
+  - QP_NULL           // null (none, nil)
+  - QP_ARRAY_OPEN     // open a new array
+  - QP_MAP_OPEN       // open a new map
+  - QP_ARRAY_CLOSE    // close array
+  - QP_MAP_CLOSE      // close map
+- `size_t qp_obj_t.len`: Length of data. (readonly, only used when tp=QP_RAW)
+- `qp_via_t qp_obj_t.via`: Union containing or pointing to the data (readonly,
+      only used when tp=QP_RAW, QP_INT64 or QP_DOUBLE)
+  - `int64_t int64`
+  - `double real`
+  - `const char * raw`
+
 ### Miscellaneous functions
 #### `const char * qp_strerror(int err_code)`
-Returns a string representation for an error code.
+Returns the error message for a given error code.
 
 #### `const char * qp_version(void)`
-Returns a string representation the version of qpack.
+Returns the version of qpack.

@@ -8,7 +8,20 @@
 #ifndef QPACK_H_
 #define QPACK_H_
 
-#define QP_VERSION "1.0.0"
+#define QP_VERSION_MAJOR 1
+#define QP_VERSION_MINOR 0
+#define QP_VERSION_PATCH 0
+
+#define QP_STRINGIFY(num) #num
+#define QP_VERSION_STR(major,minor,patch)   \
+    QP_STRINGIFY(major) "."                 \
+    QP_STRINGIFY(minor) "."                 \
+    QP_STRINGIFY(patch)
+
+#define QP_VERSION QP_VERSION_STR(          \
+        QP_VERSION_MAJOR,                   \
+        QP_VERSION_MINOR,                   \
+        QP_VERSION_PATCH)
 
 #include <inttypes.h>
 #include <stddef.h>
