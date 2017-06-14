@@ -316,13 +316,13 @@ the [qp_unpacker_t](#qp_unpacker_t) function `qp_unpacker_res()`.
 
 *Public members*
 - `qp_res_tp qp_res_t.tp`: Type of the result (readonly)
-  - QP_RES_MAP
-  - QP_RES_ARRAY
-  - QP_RES_INT64
-  - QP_RES_REAL
-  - QP_RES_STR
-  - QP_RES_BOOL
-  - QP_RES_NULL
+  - `QP_RES_MAP`
+  - `QP_RES_ARRAY`
+  - `QP_RES_INT64`
+  - `QP_RES_REAL`
+  - `QP_RES_STR`
+  - `QP_RES_BOOL`
+  - `QP_RES_NULL`
 - `qp_res_via_t qp_res_t.via`: Union containing the actual data (readonly)
   - `qp_map_t * map`
   - `qp_array_t * array`
@@ -356,8 +356,8 @@ data from an unpacker object.
 
 *Public members*
 - `uint8_t qp_obj_t.tp`: Type for the object (readonly)
-  - `QP_END         ` *(equal to 0 and indicates end of data)*
-  - `QP_ERR         ` *(error while reading unpacker)*
+  - `QP_END         ` *(equal to 0 and indicates end of unpacker)*
+  - `QP_ERR         ` *(error while reading from unpacker)*
   - `QP_RAW         ` *(raw data)*
   - `QP_HOOK        ` *(hook for custom implementations)*
   - `QP_INT64       ` *( signed 64bit interger)*
