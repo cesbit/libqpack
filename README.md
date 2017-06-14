@@ -10,6 +10,8 @@ Fast and efficient data serializer for the C program language.
     * [qp_packer_t](#qp_packer_t)
     * [qp_unpacker_t](#qp_unpacker_t)
     * [qp_res_t](#qp_res_t)
+    * [qp_map_t](#qp_map_t)
+    * [qp_array_t](#qp_array_t)
     * [Miscellaneous functions](#miscellaneous-functions)
 
 ---------------------------------------
@@ -332,6 +334,21 @@ the [qp_unpacker_t](#qp_unpacker_t) function `qp_unpacker_res()`.
 
 #### `void qp_res_destroy(qp_res_t * res)`
 Cleanup result instance.
+
+### `qp_map_t`
+Object is accesible via [qp_res_t.via.map](#qp_res_t).
+
+*Public members*
+- `size_t qp_map_t.n`: Number of keys and values in the map (readonly)
+- `qp_res_t * qp_map_t.keys`: Keys (readonly)
+- `qp_res_t * qp_map_t.values`: Values (readonly)
+
+### `qp_array_t`
+Object is accesible via [qp_res_t.via.array](#qp_res_t).
+
+*Public members*
+- `size_t qp_map_t.n`: Number of values in the array (readonly)
+- `qp_res_t * qp_map_t.values`: Values (readonly)
 
 ### Miscellaneous functions
 #### `const char * qp_strerror(int err_code)`
