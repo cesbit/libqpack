@@ -68,7 +68,7 @@ int main(void)
 
     /* Add a key. We will add the question. Note that the question will be
      * packed without the teminator (null) character. */
-    qp_add_raw(packer, q, strlen(q)); /* add question as key */
+    qp_add_raw(packer, q, strlen(q));
 
     /* Add a value. QPack only supports signed intergers. */
     qp_add_int64(packer, (int64_t) a);
