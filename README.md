@@ -357,8 +357,8 @@ data from an unpacker object.
 *Public members*
 - `uint8_t qp_obj_t.tp`: Type for the object (readonly)
   - `QP_END`            // equal to 0 and indicates end of data
-  - QP_ERR            // error while reading unpacker
-  - QP_RAW            // raw data
+  - `QP_ERR         ` (error while reading unpacker)
+  - `QP_RAW         ` *raw data*
   - QP_HOOK           // hook for custom implementations
   - QP_INT64          // signed 64bit interger
   - QP_DOUBLE         // double value
