@@ -8,8 +8,6 @@ Fast and efficient data serializer for the C program language.
     * [Unpacker](#unpacker)
   * [API](#api)
     * [qp_packer_t](#qp_packer_t)
-      * qp\_packer_create
-      * qp\_packer_destroy
 
 ---------------------------------------
 
@@ -147,8 +145,8 @@ int main(void)
 Object which is used to pack data.
 
 *Public members*
-- `qp_packer_t.buffer`: contains the packed data (readonly)
-- `qp_packer_t.len`: the length of the data (readonly)
+- `unsigned char * qp_packer_t.buffer`: contains the packed data (readonly)
+- `size_t qp_packer_t.len`: the length of the data (readonly)
 
 #### `qp_packer_t * qp_packer_create(size_t alloc_size)`
 Create and return a new packer instance. Argument `alloc_size` should be at
@@ -183,3 +181,79 @@ accepts only `int64_t` but tries to pack the value as small as possible.
 
 Returns 0 if successful or `QP_ERR_ALLOC` in case more memory is required which
 cannot be allocated.
+
+#### `int qp_add_double(qp_packer_t * packer, double d)`
+Add a double value to the packer.
+
+Returns 0 if successful or `QP_ERR_ALLOC` in case more memory is required which
+cannot be allocated.
+
+#### `int qp_add_true(qp_packer_t * packer)`
+Add boolean value `TRUE` to the packer.
+
+Returns 0 if successful or `QP_ERR_ALLOC` in case more memory is required which
+cannot be allocated.
+
+#### `int qp_add_false(qp_packer_t * packer)`
+Add boolean value `FALSE` to the packer.
+
+Returns 0 if successful or `QP_ERR_ALLOC` in case more memory is required which
+cannot be allocated.
+
+#### `int qp_add_null(qp_packer_t * packer)`
+Add `NULL` to the packer.
+
+Returns 0 if successful or `QP_ERR_ALLOC` in case more memory is required which
+cannot be allocated.
+
+#### `int qp_add_array(qp_packer_t ** packaddr)`
+Add an `ARRAY` to the packer. Do not forget to close the array using
+`qp_close_array()` although closing is not required by qpack in case
+no other values need to be added after the array.
+
+>Note: this function needs a pointer-pointer to a packer since the function
+>might re-allocate memory for the packer.
+
+Returns 0 if successful or `QP_ERR_ALLOC` in case more memory is required which
+cannot be allocated.
+
+#### `int qp_add_map(qp_packer_t ** packaddr)`
+Add an `MAP` to the packer for storing key/value pairs. Do not forget to close
+the map using `qp_close_map()` although closing is not required by qpack in case
+no other values need to be added after the map. Always add an even number of
+items which represent key/value pairs.
+
+>Note: this function needs a pointer-pointer to a packer since the function
+>might re-allocate memory for the packer.
+
+Returns 0 if successful or `QP_ERR_ALLOC` in case more memory is required which
+cannot be allocated.
+
+#### `int qp_close_array(qp_packer_t * packer)`
+Close an array.
+
+Returns 0 if successful or `QP_ERR_ALLOC` in case more memory is required which
+cannot be allocated. `QP_ERR_NO_OPEN_ARRAY` can be returned in case no *open*
+array was found.
+
+#### `int qp_close_map(qp_packer_t * packer)`
+Close a map.
+
+Returns 0 if successful or `QP_ERR_ALLOC` in case more memory is required which
+cannot be allocated. `QP_ERR_NO_OPEN_MAP` can be returned in case no *open*
+map was found or `QP_ERR_MISSING_VALUE` is returned (and the map will *not* be
+closed) if the map contains a key without value.
+
+#### `void qp_packer_print(qp_packer_t * packer)`
+Macro function for printing packer content to stdout.
+
+### `qp_unpacker_t`
+Object which is used to unpack data.
+
+*Public members*
+- `const unsigned char * qp_unpacker_t.pt`:
+  pointer to the current position in the data
+- `const unsigned char * qp_unpacker_t.start`:
+  pointer to data start (readonly)
+- `const unsigned char * qp_unpacker_t.end`:
+  pointer to data end (readonly)
