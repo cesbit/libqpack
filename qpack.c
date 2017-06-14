@@ -757,12 +757,7 @@ inline int qp_is_map(qp_types_t tp)
 
 inline int qp_is_close(qp_types_t tp)
 {
-    return tp >= QP_ARRAY_CLOSE;
-}
-
-inline int qp_is_raw(qp_types_t tp)
-{
-    return tp == QP_RAW;
+    return tp == QP_ARRAY_CLOSE || tp == QP_MAP_CLOSE;
 }
 
 inline int qp_is_int(qp_types_t tp)
@@ -773,6 +768,21 @@ inline int qp_is_int(qp_types_t tp)
 inline int qp_is_double(qp_types_t tp)
 {
     return tp == QP_DOUBLE;
+}
+
+inline int qp_is_bool(qp_types_t tp)
+{
+    return tp == QP_TRUE || tp == QP_FALSE;
+}
+
+inline int qp_is_null(qp_types_t tp)
+{
+    return tp == QP_NULL;
+}
+
+inline int qp_is_raw(qp_types_t tp)
+{
+    return tp == QP_RAW;
 }
 
 inline int qp_is_raw_term(qp_obj_t * qp_obj)

@@ -239,9 +239,11 @@ void qp_res_destroy(qp_res_t * res);
 extern int qp_is_array(qp_types_t tp);
 extern int qp_is_map(qp_types_t tp);
 extern int qp_is_close(qp_types_t tp);
-extern int qp_is_raw(qp_types_t tp);
 extern int qp_is_int(qp_types_t tp);
 extern int qp_is_double(qp_types_t tp);
+extern int qp_is_bool(qp_types_t tp);
+extern int qp_is_null(qp_types_t tp);
+extern int qp_is_raw(qp_types_t tp);
 extern int qp_is_raw_term(qp_obj_t * qp_obj);
 extern int qp_is_raw_equal(qp_obj_t * obj, const char * str);
 

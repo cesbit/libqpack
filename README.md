@@ -9,6 +9,7 @@ Fast and efficient data serializer for the C program language.
   * [API](#api)
     * [qp_packer_t](#qp_packer_t)
     * [qp_unpacker_t](#qp_unpacker_t)
+    * [qp_res_t](#qp_res_t)
 
 ---------------------------------------
 
@@ -268,5 +269,53 @@ Used walk over an unpacker instance step-by-step. After calling the function,
 to the return value of this function but note that `qp_obj` is allowed to be
 `NULL` in which case you only have the return value.
 
+Example (this code can replace the `print_qa()` code in
+the [unpacker example](#unpacker):
+```c
+qp_obj_t question, answer;
+
+assert (qp_is_map(qp_next(&unpacker, NULL)));
+assert (qp_is_raw(qp_next(&unpacker, &question)));
+assert (qp_is_int(qp_next(&unpacker, &answer)));
+
+printf(
+    "Unpacked:\n"
+    "  Question: %.*s\n"
+    "  Answer  : %" PRId64 "\n",
+    (int) question.len, question.via.raw,
+    answer.via.int64);
+```
+#### `qp_res_t * qp_unpacker_res(qp_unpacker_t * unpacker, int * rc)`
+Returns a pointer to a [qp_res_t](#qp_res_t) instance which is created from an
+unpacker instance or `NULL` in case of an error. Argument `rc` will be 0 when
+successful or `QP_ERR_ALLOC` in case required memory can not be allocated.
+The value of `rc` can also be `QP_ERR_CORRUPT` when the unpacker contains data
+which cannot be unpacked. `rc` is allowed to be `NULL`.
+
 #### `void qp_unpacker_print(qp_unpacker_t * unpacker)`
 Macro function for printing unpacker content to stdout.
+
+### `qp_res_t`
+Object which contains unpacked data. An instance of `qp_res_t` is created with
+the [qp_unpacker_t](#qp_unpacker_t) function `qp_unpacker_res()`.
+
+*Public members*
+- `qp_res_tp qp_res_t.tp`: Type of the result (readonly)
+  - QP_RES_MAP
+  - QP_RES_ARRAY
+  - QP_RES_INT64
+  - QP_RES_REAL
+  - QP_RES_STR
+  - QP_RES_BOOL
+  - QP_RES_NULL
+- `qp_res_via_t qp_res_t.via`: Union containing the actual data (readonly)
+
+#### `void qp_res_destroy(qp_res_t * res)`
+Cleanup result instance.
+
+### Miscellaneous functions
+#### `const char * qp_strerror(int err_code)`
+Returns a string representation for an error code.
+
+#### `const char * qp_version(void)`
+Returns a string representation the version of qpack.
