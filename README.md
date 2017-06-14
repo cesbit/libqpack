@@ -176,7 +176,7 @@ const char * s = "some string";
 /* We use strlen(s) so the string will be packed without the terminator (null)
  * character. */
 if ((rc = qp_add_raw(packer, s, strlen(s)))) {
-    fprintf(strerr, "error: %s\n", qp_strerror(rc));
+    fprintf(stderr, "error: %s\n", qp_strerror(rc));
 }
 ```
 
