@@ -6,6 +6,10 @@ Fast and efficient data serializer for the C program language.
   * [Usage](#usage)
     * [Packer](#packer)
     * [Unpacker](#unpacker)
+  * [API](#api)
+    * [qp_packer_t](#qp_packer_t)
+      * qp\_packer_create
+      * qp\_packer_destroy
 
 ---------------------------------------
 
@@ -142,20 +146,20 @@ int main(void)
 ### `qp_packer_t`
 Object which is used to pack data.
 
-**Public members**
+*Public members*
 - `qp_packer_t.buffer`: contains the packed data (readonly)
 - `qp_packer_t.len`: the length of the data (readonly)
 
-### `qp_packer_t * qp_packer_create(size_t alloc_size)`
+#### `qp_packer_t * qp_packer_create(size_t alloc_size)`
 Create and return a new packer instance. Argument `alloc_size` should be at
 least greather than 0 since this value is used to allocate memory. When more
 memory is required while packing data the size will grow in steps of
 `alloc_size`.
 
-### `void qp_packer_destroy(qp_packer_t * packer)`
+#### `void qp_packer_destroy(qp_packer_t * packer)`
 Cleaunup packer instance.
 
-### `int qp_add_raw(qp_packer_t * packer, const char * raw, size_t len)`
+#### `int qp_add_raw(qp_packer_t * packer, const char * raw, size_t len)`
 Add raw data to the packer.
 
 Returns 0 if successful or `QP_ERR_ALLOC` in case more memory is required which
@@ -172,7 +176,7 @@ if ((rc = qp_add_raw(packer, s, strlen(s)))) {
 }
 ```
 
-### `int qp_add_int64(qp_packer_t * packer, int64_t i)`
+#### `int qp_add_int64(qp_packer_t * packer, int64_t i)`
 Add an integer value to the packer. Note that only signed integers are
 supported by QPack so unsigned integers should be casted. This function
 accepts only `int64_t` but tries to pack the value as small as possible.
