@@ -1,5 +1,7 @@
 /*
- * main.c - Example used in the README.md
+ * main.c - Example used in the README.md, compile with:
+ *
+ *      gcc main.c -lqpack -o example.out
  *
  *  Created on: Jun 14, 2017
  *      Author: Jeroen van der Heijden <jeroen@transceptor.technology>
