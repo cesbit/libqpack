@@ -7,6 +7,7 @@
 
 
 #include <qpack.h>
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -31,7 +32,7 @@ if (packer->len + LEN > packer->buffer_size)                            \
     if (tmp == NULL)                                                    \
     {                                                                   \
         packer->buffer_size = packer->len;                              \
-        return QP_ERR_MEMORY_ALLOCATION;                                \
+        return QP_ERR_ALLOC;                                            \
     }                                                                   \
     packer->buffer = tmp;                                               \
 }
@@ -119,6 +120,8 @@ static void QP_res_destroy(qp_res_t * res);
 
 qp_packer_t * qp_packer_create(size_t alloc_size)
 {
+    assert (alloc_size);  /* alloc_size should not be 0 */
+
     qp_packer_t * packer;
     packer = (qp_packer_t *) malloc(
             sizeof(qp_packer_t) +
@@ -152,10 +155,13 @@ const char * qp_strerror(int err_code)
 {
     switch (err_code)
     {
-    case 0:                 return "success";
-    case QP_ERR_ALLOC:      return "memory allocation error";
-    case QP_ERR_CORRUPT:    return "data is invalid or corrupt";
-    default:                return "unknown error code";
+    case 0:                     return "success";
+    case QP_ERR_ALLOC:          return "memory allocation error";
+    case QP_ERR_CORRUPT:        return "data is invalid or corrupt";
+    case QP_ERR_NO_OPEN_ARRAY:  return "no array found to close";
+    case QP_ERR_NO_OPEN_MAP:    return "no map found to close";
+    case QP_ERR_MISSING_VALUE:  return "value is missing for the last key";
+    default:                    return "unknown error code";
     }
 }
 
@@ -222,7 +228,7 @@ int qp_add_array(qp_packer_t ** packaddr)
         if (tmp == NULL)
         {
             packer->nest_sz /= 2;
-            return QP_ERR_MEMORY_ALLOCATION;
+            return QP_ERR_ALLOC;
         }
 
         (*packaddr) = packer = tmp;
@@ -282,7 +288,7 @@ int qp_add_map(qp_packer_t ** packaddr)
         if (tmp == NULL)
         {
             packer->nest_sz /= 2;
-            return QP_ERR_MEMORY_ALLOCATION;
+            return QP_ERR_ALLOC;
         }
 
         (*packaddr) = packer = tmp;
@@ -831,11 +837,11 @@ qp_res_t * qp_unpacker_res(qp_unpacker_t * unpacker, int * rc)
     return res;
 }
 
-void qp_print(const unsigned char * pt, size_t len)
+void qp_print(const unsigned char * data, size_t len)
 {
     qp_obj_t qp_obj;
     qp_unpacker_t unpacker;
-    qp_unpacker_init(&unpacker, pt, len);
+    qp_unpacker_init(&unpacker, data, len);
     QP_print_unpacker(qp_next(&unpacker, &qp_obj), &unpacker, &qp_obj);
     printf("\n");
 }

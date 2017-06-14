@@ -37,7 +37,7 @@ qpack can be used:
 }
 ```
 ### Packer
-This example shows how to use the packer.
+First we start to pack the data.
 ```c
 #include <qpack.h>
 #include <assert.h>
@@ -51,7 +51,7 @@ const int a = 42;
 
 int main(void)
 {
-    qp_packer_t * packer = qp_packer_create(QP_SUGGESTED_SIZE);
+    qp_packer_t * packer = qp_packer_create(512);
     if (packer == NULL) {
         abort();
     }
@@ -81,6 +81,7 @@ int main(void)
 ```
 
 ### Unpacker
+Now we create some code to unpack the data.
 ```c
 void print_qa(const unsigned char * data, size_t len)
 {
@@ -135,3 +136,46 @@ int main(void)
     return 0;
 }
 ```
+
+## API
+
+### `qp_packer_t`
+Object which is used to pack data.
+
+**Public members**
+- `qp_packer_t.buffer`: contains the packed data (readonly)
+- `qp_packer_t.len`: the length of the data (readonly)
+
+### `qp_packer_t * qp_packer_create(size_t alloc_size)`
+Create and return a new packer instance. Argument `alloc_size` should be at
+least greather than 0 since this value is used to allocate memory. When more
+memory is required while packing data the size will grow in steps of
+`alloc_size`.
+
+### `void qp_packer_destroy(qp_packer_t * packer)`
+Cleaunup packer instance.
+
+### `int qp_add_raw(qp_packer_t * packer, const char * raw, size_t len)`
+Add raw data to the packer.
+
+Returns 0 if successful or `QP_ERR_ALLOC` in case more memory is required which
+cannot be allocated.
+
+Example:
+```c
+int rc;
+const char * s = "some string";
+/* We use strlen(s) so the string will be packed without the terminator (null)
+ * character. */
+if ((rc = qp_add_raw(packer, s, strlen(s)))) {
+    fprintf(strerr, "error: %s\n", qp_strerror(rc));
+}
+```
+
+### `int qp_add_int64(qp_packer_t * packer, int64_t i)`
+Add an integer value to the packer. Note that only signed integers are
+supported by QPack so unsigned integers should be casted. This function
+accepts only `int64_t` but tries to pack the value as small as possible.
+
+Returns 0 if successful or `QP_ERR_ALLOC` in case more memory is required which
+cannot be allocated.

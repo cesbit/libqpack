@@ -53,7 +53,7 @@ void print_qa(const unsigned char * data, size_t len)
 
 int main(void)
 {
-    qp_packer_t * packer = qp_packer_create(QP_SUGGESTED_SIZE);
+    qp_packer_t * packer = qp_packer_create(512);
     if (packer == NULL) {
         abort();
     }

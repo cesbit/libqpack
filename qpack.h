@@ -13,11 +13,6 @@
 #include <inttypes.h>
 #include <stddef.h>
 
-#define QP_SUGGESTED_SIZE 65536
-
-#define QP_ERR_ALLOC -1
-#define QP_ERR_CORRUPT -2
-
 typedef union qp_via_u qp_via_t;
 typedef union qp_res_u qp_res_via_t;
 
@@ -87,10 +82,11 @@ enum
 /* enums */
 enum qp_err_e
 {
-    QP_ERR_MEMORY_ALLOCATION=-100,
-    QP_ERR_NO_OPEN_ARRAY,
+    QP_ERR_NO_OPEN_ARRAY=-5,
     QP_ERR_NO_OPEN_MAP,
     QP_ERR_MISSING_VALUE,
+    QP_ERR_CORRUPT,
+    QP_ERR_ALLOC,
 };
 
 enum qp_res_e
@@ -212,10 +208,6 @@ struct qp_unpacker_s
 qp_packer_t * qp_packer_create(size_t alloc_size);
 void qp_packer_destroy(qp_packer_t * packer);
 
-/* misc functions */
-const char * qp_strerror(int err_code);
-const char * qp_version(void);
-
 /* add to packer functions */
 int qp_add_raw(qp_packer_t * packer, const char * raw, size_t len);
 int qp_add_int64(qp_packer_t * packer, int64_t i);
@@ -254,9 +246,13 @@ extern int qp_is_raw_term(qp_obj_t * qp_obj);
 extern int qp_is_raw_equal(qp_obj_t * obj, const char * str);
 
 /* print */
-void qp_print(const unsigned char * pt, size_t len);
+void qp_print(const unsigned char * data, size_t len);
 #define qp_packer_print(packer) qp_print(packer->buffer, packer->len)
 #define qp_unpacker_print(unpacker) \
     qp_print(unpacker->start, unpacker->end - unpacker->start)
+
+/* misc functions */
+const char * qp_strerror(int err_code);
+const char * qp_version(void);
 
 #endif /* QPACK_H_ */
