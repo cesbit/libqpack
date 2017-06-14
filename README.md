@@ -10,6 +10,7 @@ Fast and efficient data serializer for the C program language.
     * [qp_packer_t](#qp_packer_t)
     * [qp_unpacker_t](#qp_unpacker_t)
     * [qp_res_t](#qp_res_t)
+    * [Miscellaneous functions](#miscellaneous-functions)
 
 ---------------------------------------
 
@@ -309,6 +310,13 @@ the [qp_unpacker_t](#qp_unpacker_t) function `qp_unpacker_res()`.
   - QP_RES_BOOL
   - QP_RES_NULL
 - `qp_res_via_t qp_res_t.via`: Union containing the actual data (readonly)
+  - `qp_map_t * map`
+  - `qp_array_t * array`
+  - `char * str`
+  - `int64_t int64`
+  - `double real`
+  - `int bool`
+  - `void * null`
 
 #### `void qp_res_destroy(qp_res_t * res)`
 Cleanup result instance.
