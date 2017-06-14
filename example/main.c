@@ -27,7 +27,12 @@ void print_qa(const unsigned char * data, size_t len)
      * the data using qp_next() and the other is to unpack all to a qp_res_t
      * object. The last option is probably easier and is what we will use in
      * this example but note that it consumes more memory and is potentially
-     * slower compared to qp_next() for some use cases. */
+     * slower compared to qp_next() for some use cases. An advantage might be
+     * that the original data/unpacker is no longer required by qp_res_t.
+     *
+     * One more important difference is that qp_res_t contains null terminated
+     * copies for raw data which mean that this method cannot be used in case
+     * raw data contains null characters by themself. */
 
     res = qp_unpacker_res(&unpacker, &rc);
     if (rc) {

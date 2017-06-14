@@ -101,7 +101,10 @@ void print_qa(const unsigned char * data, size_t len)
      * the data using qp_next() and the other is to unpack all to a qp_res_t
      * object. The last option is probably easier and is what we will use in
      * this example but note that it consumes more memory and is potentially
-     * slower compared to qp_next() for some use cases. */
+     * slower compared to qp_next() for some use cases. One more important
+     * difference is that qp_res_t contains null terminated copies for raw data
+     * which mean that this function cannot be used in case raw data contains
+     * null characters by themself. */
 
     res = qp_unpacker_res(&unpacker, &rc);
     if (rc) {
@@ -268,7 +271,9 @@ Initialize an `qp_unpacker_t` instance. No additional clean is required.
 Used walk over an unpacker instance step-by-step. After calling the function,
 `qp_obj` points to the current item in the unpacker. `qp_obj.tp` is always equal
 to the return value of this function but note that `qp_obj` is allowed to be
-`NULL` in which case you only have the return value.
+`NULL` in which case you only have the return value. Because a `qp_obj_t`
+instance *can* point to the raw data in the unpacker, the unpacker/data must
+not be destroyed as long as the `qp_obj_t` is in use.
 
 Example (this code can replace the `print_qa()` code in
 the [unpacker example](#unpacker):
@@ -287,11 +292,18 @@ printf(
     answer.via.int64);
 ```
 #### `qp_res_t * qp_unpacker_res(qp_unpacker_t * unpacker, int * rc)`
-Returns a pointer to a [qp_res_t](#qp_res_t) instance which is created from an
-unpacker instance or `NULL` in case of an error. Argument `rc` will be 0 when
-successful or `QP_ERR_ALLOC` in case required memory can not be allocated.
-The value of `rc` can also be `QP_ERR_CORRUPT` when the unpacker contains data
-which cannot be unpacked. `rc` is allowed to be `NULL`.
+Returns a pointer to a [qp_res_t](#qp_res_t) instance or `NULL` in case of an
+error. When successful the original data (unpacker) is no longer required and
+can be destroyed.
+
+Argument `rc` is 0 when successful or `QP_ERR_ALLOC` in case required memory
+cannot be allocated. The value of `rc` is `QP_ERR_CORRUPT` when the unpacker
+contains data which cannot be unpacked. `rc` is not required and is allowed to
+be `NULL`.
+
+>Note: Each raw value will be copied to a NULL terminated string which means
+>that this function cannot be used in case your raw data contains NULL
+>characters. In the latter case you need to use `qp_next()` to unpack the data.
 
 #### `void qp_unpacker_print(qp_unpacker_t * unpacker)`
 Macro function for printing unpacker content to stdout.
@@ -312,11 +324,11 @@ the [qp_unpacker_t](#qp_unpacker_t) function `qp_unpacker_res()`.
 - `qp_res_via_t qp_res_t.via`: Union containing the actual data (readonly)
   - `qp_map_t * map`
   - `qp_array_t * array`
-  - `char * str`
+  - `char * str` (null terminated string)
   - `int64_t int64`
   - `double real`
-  - `int bool`
-  - `void * null`
+  - `int bool` (0=FALSE or 1=TRUE)
+  - `void * null` (set to the actual `NULL` pointer)
 
 #### `void qp_res_destroy(qp_res_t * res)`
 Cleanup result instance.
