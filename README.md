@@ -4,6 +4,8 @@ Fast and efficient data serializer for the C program language.
 ---------------------------------------
   * [Installation](#installation)
   * [Usage](#usage)
+    * [Packer](#packer)
+    * [Unpacker](#unpacker)
 
 ---------------------------------------
 
@@ -38,7 +40,9 @@ qpack can be used:
 This example shows how to use the packer.
 ```c
 #include <qpack.h>
+#include <assert.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <inttypes.h>
 
@@ -82,7 +86,7 @@ void print_qa(const unsigned char * data, size_t len)
 {
     qp_unpacker_t unpacker;
     qp_res_t * res;
-    inr rc;
+    int rc;
 
     /* Initialize the unpacker */
     qp_unpacker_init(&unpacker, data, len);
@@ -95,12 +99,24 @@ void print_qa(const unsigned char * data, size_t len)
 
     res = qp_unpacker_res(&unpacker, &rc);
     if (rc) {
-        fprintf(stderr, "error: %s\n", qp_strrerror(rc));
-        abort();
-    }
+        fprintf(stderr, "error: %s\n", qp_strerror(rc));
+    } else {
+        /* Usually you should check your response not with assertions */
+        assert (res->tp == QP_RES_MAP);
+        assert (res->via.map->n == 1); /* one key/value pair */
+        assert (res->via.map->keys[0].tp == QP_RES_STR);   /* key */
+        assert (res->via.map->values[0].tp == QP_RES_INT64); /* val */
 
-    /* cleanup res */
-    qp_res_destroy(res);
+        printf(
+            "Unpacked:\n"
+            "  Question: %s\n"
+            "  Answer  : %" PRId64 "\n",
+            res->via.map->keys[0].via.str,
+            res->via.map->values[0].via.int64);
+
+        /* cleanup res */
+        qp_res_destroy(res);
+    }
 }
 
 /* Call the function from main (see packer example for full code) */

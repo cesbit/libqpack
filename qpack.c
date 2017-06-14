@@ -2,7 +2,7 @@
  * qpack.c
  *
  *  Created on: Mar 22, 2017
- *      Author: joente
+ *      Author: Jeroen van der Heijden <jeroen@transceptor.technology>
  */
 
 

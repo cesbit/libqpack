@@ -1,10 +1,55 @@
+/*
+ * main.c - Example used in the README.md
+ *
+ *  Created on: Jun 14, 2017
+ *      Author: Jeroen van der Heijden <jeroen@transceptor.technology>
+ */
 #include <qpack.h>
+#include <assert.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <inttypes.h>
 
 const char * q = "What is the answer to life the universe and everything?";
 const int a = 42;
+
+void print_qa(const unsigned char * data, size_t len)
+{
+    qp_unpacker_t unpacker;
+    qp_res_t * res;
+    int rc;
+
+    /* Initialize the unpacker */
+    qp_unpacker_init(&unpacker, data, len);
+
+    /* We can get the data from the unpacker in two ways. One is to step over
+     * the data using qp_next() and the other is to unpack all to a qp_res_t
+     * object. The last option is probably easier and is what we will use in
+     * this example but note that it consumes more memory and is potentially
+     * slower compared to qp_next() for some use cases. */
+
+    res = qp_unpacker_res(&unpacker, &rc);
+    if (rc) {
+        fprintf(stderr, "error: %s\n", qp_strerror(rc));
+    } else {
+        /* Usually you should check your response not with assertions */
+        assert (res->tp == QP_RES_MAP);
+        assert (res->via.map->n == 1); /* one key/value pair */
+        assert (res->via.map->keys[0].tp == QP_RES_STR);   /* key */
+        assert (res->via.map->values[0].tp == QP_RES_INT64); /* val */
+
+        printf(
+            "Unpacked:\n"
+            "  Question: %s\n"
+            "  Answer  : %" PRId64 "\n",
+            res->via.map->keys[0].via.str,
+            res->via.map->values[0].via.int64);
+
+        /* cleanup res */
+        qp_res_destroy(res);
+    }
+}
 
 int main(void)
 {
@@ -29,6 +74,9 @@ int main(void)
 
     /* Print the packed data */
     qp_packer_print(packer);
+
+    /* Unpack example */
+    print_qa(packer->buffer, packer->len);
 
     /* cleanup the packer */
     qp_packer_destroy(packer);
