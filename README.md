@@ -8,6 +8,7 @@ Fast and efficient data serializer for the C program language.
     * [Unpacker](#unpacker)
   * [API](#api)
     * [qp_packer_t](#qp_packer_t)
+    * [qp_unpacker_t](#qp_unpacker_t)
 
 ---------------------------------------
 
@@ -257,3 +258,15 @@ Object which is used to unpack data.
   pointer to data start (readonly)
 - `const unsigned char * qp_unpacker_t.end`:
   pointer to data end (readonly)
+
+#### `void qp_unpacker_init(qp_unpacker_t * unpacker, const unsigned char * pt, size_t len)`
+Initialize an `qp_unpacker_t` instance. No additional clean is required.
+
+#### `qp_types_t qp_next(qp_unpacker_t * unpacker, qp_obj_t * qp_obj)`
+Used walk over an unpacker instance step-by-step. After calling the function,
+`qp_obj` points to the current item in the unpacker. `qp_obj.tp` is always equal
+to the return value of this function but note that `qp_obj` is allowed to be
+`NULL` in which case you only have the return value.
+
+#### `void qp_unpacker_print(qp_unpacker_t * unpacker)`
+Macro function for printing unpacker content to stdout.
