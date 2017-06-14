@@ -58,6 +58,7 @@ void print_qa(const unsigned char * data, size_t len)
 
 int main(void)
 {
+    printf("Example running with qpack version: %s\n\n", qp_version());
     qp_packer_t * packer = qp_packer_create(512);
     if (packer == NULL) {
         abort();
