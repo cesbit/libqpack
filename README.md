@@ -382,8 +382,8 @@ data from an unpacker object.
   - `QP_ARRAY_CLOSE ` *(close array)*
   - `QP_MAP_CLOSE   ` *(close map)*
 - `size_t qp_obj_t.len`: Length of data. (readonly, only used when tp=QP_RAW)
-- `qp_via_t qp_obj_t.via`: Union containing or pointing to the data (readonly,
-      only used when tp=QP_RAW, QP_INT64 or QP_DOUBLE)
+- `qp_via_t qp_obj_t.via`: Union type (readonly, only used when tp=QP_RAW,
+ QP_INT64 or QP_DOUBLE)
   - `int64_t int64`
   - `double real`
   - `const char * raw`
