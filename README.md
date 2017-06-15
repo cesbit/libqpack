@@ -1,5 +1,5 @@
-# QPack-C (libqpack)
-Fast and efficient data serializer for the C program language.
+# QPack for the C programming language (libqpack)
+Fast and efficient data serializer for the C programming language.
 
 ---------------------------------------
   * [Installation](#installation)
