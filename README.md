@@ -67,7 +67,7 @@ int main(void)
     qp_add_map(&packer);
 
     /* Add a key. We will add the question. Note that the question will be
-     * packed without the teminator (null) character. */
+     * packed without the terminator (null) character. */
     qp_add_raw(packer, q, strlen(q));
 
     /* Add a value. QPack only supports signed intergers. */
@@ -105,7 +105,7 @@ void print_qa(const unsigned char * data, size_t len)
      * this example but note that it consumes more memory and is potentially
      * slower compared to qp_next() for some use cases. One more important
      * difference is that qp_res_t contains null terminated copies for raw data
-     * which mean that this function cannot be used in case raw data contains
+     * which means that this function cannot be used in case raw data contains
      * null characters by themself. */
 
     res = qp_unpacker_res(&unpacker, &rc);
@@ -226,7 +226,7 @@ Returns 0 if successful or `QP_ERR_ALLOC` in case more memory is required which
 cannot be allocated.
 
 #### `int qp_add_map(qp_packer_t ** packaddr)`
-Add an `MAP` to the packer for storing key/value pairs. Do not forget to close
+Add a `MAP` to the packer for storing key/value pairs. Do not forget to close
 the map using `qp_close_map()` although closing is not required by qpack in case
 no other values need to be added after the map. Always add an even number of
 items which represent key/value pairs.
@@ -267,7 +267,7 @@ Object which is used to unpack data.
   pointer to data end (readonly)
 
 #### `void qp_unpacker_init(qp_unpacker_t * unpacker, const unsigned char * pt, size_t len)`
-Initialize an `qp_unpacker_t` instance. No additional clean is required.
+Initialize a `qp_unpacker_t` instance. No additional clean is required.
 
 #### `qp_types_t qp_next(qp_unpacker_t * unpacker, qp_obj_t * qp_obj)`
 Used walk over an unpacker instance step-by-step. After calling the function,
@@ -360,7 +360,7 @@ data from an unpacker object.
   - `QP_ERR         ` *(error while reading from unpacker)*
   - `QP_RAW         ` *(raw data)*
   - `QP_HOOK        ` *(hook for custom implementations)*
-  - `QP_INT64       ` *( signed 64bit interger)*
+  - `QP_INT64       ` *(signed 64bit interger)*
   - `QP_DOUBLE      ` *(double value)*
   - `QP_ARRAY0      ` *(empty array)*
   - `QP_ARRAY1      ` *(array with 1 item)*
