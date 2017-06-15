@@ -25,6 +25,7 @@
 
 #include <inttypes.h>
 #include <stddef.h>
+#include <stdio.h>
 
 typedef union qp_via_u qp_via_t;
 typedef union qp_res_u qp_res_via_t;
@@ -95,7 +96,8 @@ enum
 /* enums */
 enum qp_err_e
 {
-    QP_ERR_NO_OPEN_ARRAY=-5,
+    QP_ERR_WRITE_STREAM=-6,
+    QP_ERR_NO_OPEN_ARRAY,
     QP_ERR_NO_OPEN_MAP,
     QP_ERR_MISSING_VALUE,
     QP_ERR_CORRUPT,
@@ -247,6 +249,7 @@ qp_types_t qp_next(qp_unpacker_t * unpacker, qp_obj_t * qp_obj);
 /* unpack all */
 qp_res_t * qp_unpacker_res(qp_unpacker_t * unpacker, int * rc);
 void qp_res_destroy(qp_res_t * res);
+int qp_res_fprint(qp_res_t * res, FILE * stream);
 
 /* test functions for qp_obj_t */
 extern int qp_is_array(qp_types_t tp);

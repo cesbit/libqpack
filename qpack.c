@@ -10,7 +10,6 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
 #define QP__INITIAL_NEST_SIZE 2
 #define QP__INITIAL_ALLOC_SZ 8
@@ -157,6 +156,7 @@ const char * qp_strerror(int err_code)
     {
     case 0:                     return "success";
     case QP_ERR_ALLOC:          return "memory allocation error";
+    case QP_ERR_WRITE_STREAM:   return "cannot write to stream";
     case QP_ERR_CORRUPT:        return "data is invalid or corrupt";
     case QP_ERR_NO_OPEN_ARRAY:  return "no array found to close";
     case QP_ERR_NO_OPEN_MAP:    return "no map found to close";
@@ -811,6 +811,86 @@ void qp_res_destroy(qp_res_t * res)
     free(res);
 }
 
+int qp_res_fprint(qp_res_t * res, FILE * stream)
+{
+    int i, rc = 0;
+    switch(res->tp)
+    {
+    case QP_RES_ARRAY:
+        if (fprintf(stream, "[") < 0)
+        {
+            return QP_ERR_WRITE_STREAM;
+        }
+        for (i = 0; i < res->via.array->n; i++)
+        {
+            if ((i && fprintf(stream, ",") < 0) ||
+                (rc = qp_res_fprint(res->via.array->values + i, stream)))
+            {
+                return (rc) ? rc : QP_ERR_WRITE_STREAM;
+            }
+        }
+        if (fprintf(stream, "]") < 0)
+        {
+            return QP_ERR_WRITE_STREAM;
+        }
+        break;
+    case QP_RES_STR:
+        if (fprintf(stream, "%s", res->via.str) < 0)
+        {
+            return QP_ERR_WRITE_STREAM;
+        }
+        break;
+    case QP_RES_BOOL:
+        if (fprintf(stream, "%s", (res->via.bool) ? "TRUE": "FALSE") < 0)
+        {
+            return QP_ERR_WRITE_STREAM;
+        }
+        break;
+    case QP_RES_NULL:
+        if (fprintf(stream, "NULL") < 0)
+        {
+            return QP_ERR_WRITE_STREAM;
+        }
+        break;
+    case QP_RES_INT64:
+        if (fprintf(stream, "%" PRId64, res->via.int64) < 0)
+        {
+            return QP_ERR_WRITE_STREAM;
+        }
+        break;
+    case QP_RES_REAL:
+        if (fprintf(stream, "%f", res->via.real) < 0)
+        {
+            return QP_ERR_WRITE_STREAM;
+        }
+        break;
+    case QP_RES_MAP:
+        if (fprintf(stream, "{") < 0)
+        {
+            return QP_ERR_WRITE_STREAM;
+        }
+
+        for (i = 0; i < res->via.map->n; i++)
+        {
+            if ((i && fprintf(stream, ",") < 0) || (
+                (rc = qp_res_fprint(res->via.map->keys + i, stream)) ||
+                fprintf(stream, ":") < 0 ||
+                (rc = qp_res_fprint(res->via.map->values + i, stream))))
+            {
+                return (rc) ? rc : QP_ERR_WRITE_STREAM;
+            }
+        }
+        if (fprintf(stream, "}") < 0)
+        {
+            return QP_ERR_WRITE_STREAM;
+        }
+        break;
+    default:
+        return QP_ERR_CORRUPT;
+    }
+    return rc;
+}
+
 qp_res_t * qp_unpacker_res(qp_unpacker_t * unpacker, int * rc)
 {
     int fallb;
@@ -880,13 +960,13 @@ static qp_types_t QP_print_unpacker(
         printf("\"%.*s\"", (int) qp_obj->len, qp_obj->via.raw);
         break;
     case QP_TRUE:
-        printf("true");
+        printf("TRUE");
         break;
     case QP_FALSE:
-        printf("false");
+        printf("FALSE");
         break;
     case QP_NULL:
-        printf("null");
+        printf("NULL");
         break;
     case QP_ARRAY0:
     case QP_ARRAY1:

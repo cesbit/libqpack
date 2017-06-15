@@ -335,6 +335,11 @@ the [qp_unpacker_t](#qp_unpacker_t) function `qp_unpacker_res()`.
 #### `void qp_res_destroy(qp_res_t * res)`
 Cleanup result instance.
 
+#### `int qp_res_fprint(qp_res_t * res, FILE * stream)`
+Print a `qp_res_t` to a given stream. Returns 0 if successful. The return value
+is `QP_ERR_WRITE_STREAM` when writing to the stream fails or `QP_ERR_CORRUPT`
+when `res` contains invalid data.
+
 ### `qp_map_t`
 Object is accesible via [qp_res_t.via.map](#qp_res_t).
 

@@ -41,12 +41,13 @@ int main(void)
 
     if (rc == 0)
     {
+        qp_res_fprint(res, stdout);
         qp_res_destroy(res);
     }
 
     qp_packer_destroy(packer);
 
-    puts("Finished QPack library test!");
+    puts("\n\nFinished QPack library test!");
 
     return 0;
 }
