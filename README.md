@@ -278,8 +278,9 @@ to the return value of this function but note that `qp_obj` is allowed to be
 instance *can* point to the raw data in the unpacker, the unpacker/data must
 not be destroyed as long as the `qp_obj_t` is in use.
 
-Example (this code is similar to the`print_qa()` code in
-the [unpacker example](#unpacker) but uses `qp_next()` instead of `qp_unpacker_res()`):
+Example:
+>Note: this code is similar to the`print_qa()` code in the [unpacker example](#unpacker) 
+>but uses `qp_next()` instead of `qp_unpacker_res()`)
 ```c
 qp_obj_t question, answer;
 
