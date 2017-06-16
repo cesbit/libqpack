@@ -267,7 +267,8 @@ Object which is used to unpack data.
   pointer to data end (readonly)
 
 #### `void qp_unpacker_init(qp_unpacker_t * unpacker, const unsigned char * pt, size_t len)`
-Initialize a `qp_unpacker_t` instance. No additional clean is required.
+Initialize a `qp_unpacker_t` instance. No cleanup after the initialization is required. It is 
+allowed to run this function multiple times to bring the unpacker back to its initial state.
 
 #### `qp_types_t qp_next(qp_unpacker_t * unpacker, qp_obj_t * qp_obj)`
 Used walk over an unpacker instance step-by-step. After calling the function,
