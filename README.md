@@ -271,7 +271,7 @@ Initialize a `qp_unpacker_t` instance. No cleanup after the initialization is re
 allowed to run this function multiple times to bring the unpacker back to its initial state.
 
 #### `qp_types_t qp_next(qp_unpacker_t * unpacker, qp_obj_t * qp_obj)`
-Used walk over an unpacker instance step-by-step. After calling the function,
+Can be used to walk over an unpacker instance step-by-step. After calling the function,
 `qp_obj` points to the current item in the unpacker. `qp_obj.tp` is always equal
 to the return value of this function but note that `qp_obj` is allowed to be
 `NULL` in which case you only have the return value. Because a `qp_obj_t`
