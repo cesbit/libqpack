@@ -1,5 +1,5 @@
 # QPack for the C programming language (libqpack)
-Fast and efficient data serializer for the C programming language. QPack is originally created for [SiriDB](https://github.com/transceptor-technology/siridb-server) but is now used by a lot of other projects too.
+Fast and efficient data serializer for the C/C++ programming language. QPack is originally created for [SiriDB](https://github.com/transceptor-technology/siridb-server) but is now used by a lot of other projects too.
 
 ---------------------------------------
   * [Installation](#installation)
