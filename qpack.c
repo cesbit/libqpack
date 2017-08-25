@@ -841,7 +841,7 @@ int qp_res_fprint(qp_res_t * res, FILE * stream)
         }
         break;
     case QP_RES_BOOL:
-        if (fprintf(stream, "%s", (res->via.bool) ? "TRUE": "FALSE") < 0)
+        if (fprintf(stream, "%s", (res->via.boolean) ? "TRUE": "FALSE") < 0)
         {
             return QP_ERR_WRITE_STREAM;
         }
@@ -1177,7 +1177,7 @@ static int QP_res(qp_unpacker_t * unpacker, qp_res_t * res, qp_obj_t * val)
     case QP_TRUE:
     case QP_FALSE:
         res->tp = QP_RES_BOOL;
-        res->via.bool = (val->tp == QP_TRUE);
+        res->via.boolean = (val->tp == QP_TRUE);
         return 0;
     case QP_NULL:
         res->tp = QP_RES_NULL;

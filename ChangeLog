@@ -1,3 +1,11 @@
+libqpack (0.10.0)
+
+  * Addedd __cplusplus macro for c++ compatibility.
+
+  * Renamed qp_res_via_t member bool to boolean.
+
+ -- Jeroen van der Heijden <jeroen@transceptor.technology>  25 Aug 2017
+
 libqpack (0.9.2)
 
   * Added QP_ERR_WRITE_STREAM error code.

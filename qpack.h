@@ -9,8 +9,8 @@
 #define QPACK_H_
 
 #define QP_VERSION_MAJOR 0
-#define QP_VERSION_MINOR 9
-#define QP_VERSION_PATCH 2
+#define QP_VERSION_MINOR 10
+#define QP_VERSION_PATCH 0
 
 #define QP_STRINGIFY(num) #num
 #define QP_VERSION_STR(major,minor,patch)   \
@@ -36,10 +36,6 @@ typedef struct qp_unpacker_s qp_unpacker_t;
 typedef struct qp_res_s qp_res_t;
 typedef struct qp_map_s qp_map_t;
 typedef struct qp_array_s qp_array_t;
-
-typedef enum qp_res_e qp_res_tp;
-typedef enum qp_err_e qp_err_t;
-typedef enum qp_types_e qp_types_t;
 
 /* private typemap */
 enum
@@ -94,7 +90,7 @@ enum
 };
 
 /* enums */
-enum qp_err_e
+typedef enum qp_err_e
 {
     QP_ERR_WRITE_STREAM=-6,
     QP_ERR_NO_OPEN_ARRAY,
@@ -102,9 +98,9 @@ enum qp_err_e
     QP_ERR_MISSING_VALUE,
     QP_ERR_CORRUPT,
     QP_ERR_ALLOC,
-};
+} qp_err_t;
 
-enum qp_res_e
+typedef enum qp_res_e
 {
     QP_RES_MAP,
     QP_RES_ARRAY,
@@ -113,9 +109,9 @@ enum qp_res_e
     QP_RES_STR,
     QP_RES_BOOL,
     QP_RES_NULL,
-};
+} qp_res_tp;
 
-enum qp_types_e
+typedef enum qp_types_e
 {
     QP_END=QP__END,
     QP_ERR,
@@ -142,6 +138,12 @@ enum qp_types_e
     QP_MAP_OPEN,        // open a new map
     QP_ARRAY_CLOSE,     // close array
     QP_MAP_CLOSE,       // close map
+} qp_types_t;
+
+enum qp__nest_types
+{
+    NEST_ARRAY,
+    NEST_MAP
 };
 
 union qp_via_u
@@ -178,7 +180,7 @@ union qp_res_u
     char * str;
     int64_t int64;
     double real;
-    int bool;
+    int boolean;
     void * null;
 };
 
@@ -186,12 +188,6 @@ struct qp_res_s
 {
     qp_res_tp tp;
     qp_res_via_t via;
-};
-
-enum qp__nest_types
-{
-    NEST_ARRAY,
-    NEST_MAP
 };
 
 struct qp__nest_s
@@ -218,6 +214,10 @@ struct qp_unpacker_s
     const unsigned char * pt;
     const unsigned char * end;
 };
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* create and destroy functions */
 qp_packer_t * qp_packer_create(size_t alloc_size);
@@ -272,5 +272,9 @@ void qp_print(const unsigned char * data, size_t len);
 /* misc functions */
 const char * qp_strerror(int err_code);
 const char * qp_version(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* QPACK_H_ */

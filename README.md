@@ -70,7 +70,7 @@ int main(void)
      * packed without the terminator (null) character. */
     qp_add_raw(packer, q, strlen(q));
 
-    /* Add a value. QPack only supports signed intergers. */
+    /* Add a value. QPack only supports signed integers. */
     qp_add_int64(packer, (int64_t) a);
 
     /* Close the map. Note that in a map an even number of items must be placed
@@ -267,7 +267,7 @@ Object which is used to unpack data.
   pointer to data end (readonly)
 
 #### `void qp_unpacker_init(qp_unpacker_t * unpacker, const unsigned char * pt, size_t len)`
-Initialize a `qp_unpacker_t` instance. No cleanup after the initialization is required. It is 
+Initialize a `qp_unpacker_t` instance. No cleanup after the initialization is required. It is
 allowed to run this function multiple times to bring the unpacker back to its initial state.
 
 #### `qp_types_t qp_next(qp_unpacker_t * unpacker, qp_obj_t * qp_obj)`
@@ -279,7 +279,7 @@ instance *can* point to the raw data in the unpacker, the unpacker/data must
 not be destroyed as long as the `qp_obj_t` is in use.
 
 Example:
->Note: this code is similar to the`print_qa()` code in the [unpacker example](#unpacker) 
+>Note: this code is similar to the`print_qa()` code in the [unpacker example](#unpacker)
 >but uses `qp_next()` instead of `qp_unpacker_res()`
 ```c
 qp_obj_t question, answer;
@@ -331,7 +331,7 @@ the [qp_unpacker_t](#qp_unpacker_t) function `qp_unpacker_res()`.
   - `char * str` (null terminated string)
   - `int64_t int64`
   - `double real`
-  - `int bool` (0=FALSE or 1=TRUE)
+  - `int boolean` (0=FALSE or 1=TRUE)
   - `void * null` (set to the actual `NULL` pointer)
 
 #### `void qp_res_destroy(qp_res_t * res)`
