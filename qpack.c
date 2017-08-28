@@ -111,9 +111,11 @@ if (unpacker->pt + size > unpacker->end)                                \
 }
 
 static qp_types_t QP_print_unpacker(
+        FILE * stream,
         qp_types_t tp,
         qp_unpacker_t * unpacker,
         qp_obj_t * qp_obj);
+static void QP_fprint_raw(FILE * stream, const char * s, size_t n);
 static int QP_res(qp_unpacker_t * unpacker, qp_res_t * res, qp_obj_t * val);
 static void QP_res_destroy(qp_res_t * res);
 
@@ -934,14 +936,37 @@ qp_res_t * qp_unpacker_res(qp_unpacker_t * unpacker, int * rc)
 
 void qp_print(const unsigned char * data, size_t len)
 {
-    qp_obj_t qp_obj;
-    qp_unpacker_t unpacker;
-    qp_unpacker_init(&unpacker, data, len);
-    QP_print_unpacker(qp_next(&unpacker, &qp_obj), &unpacker, &qp_obj);
+    qp_fprint(stdout, data, len);
     printf("\n");
 }
 
+void qp_fprint(FILE * stream, const unsigned char * data, size_t len)
+{
+    qp_obj_t qp_obj;
+    qp_unpacker_t unpacker;
+    qp_unpacker_init(&unpacker, data, len);
+    QP_print_unpacker(stream, qp_next(&unpacker, &qp_obj), &unpacker, &qp_obj);
+}
+
+static void QP_fprint_raw(FILE * stream, const char * s, size_t n)
+{
+    fputc('"', stream);
+    for (size_t i = 0; i < n; i++)
+    {
+        char c = s[i];
+        switch (c)
+        {
+        case '"':
+        case '\\':
+            fputc('\\', stream);
+        }
+        fputc(c, stream);
+    }
+    fputc('"', stream);
+}
+
 static qp_types_t QP_print_unpacker(
+        FILE * stream,
         qp_types_t tp,
         qp_unpacker_t * unpacker,
         qp_obj_t * qp_obj)
@@ -951,22 +976,22 @@ static qp_types_t QP_print_unpacker(
     switch (tp)
     {
     case QP_INT64:
-        printf("%" PRId64, qp_obj->via.int64);
+        fprintf(stream, "%" PRId64, qp_obj->via.int64);
         break;
     case QP_DOUBLE:
-        printf("%f", qp_obj->via.real);
+        fprintf(stream, "%f", qp_obj->via.real);
         break;
     case QP_RAW:
-        printf("\"%.*s\"", (int) qp_obj->len, qp_obj->via.raw);
+        QP_fprint_raw(stream, qp_obj->via.raw, qp_obj->len);
         break;
     case QP_TRUE:
-        printf("TRUE");
+        fprintf(stream, "true");
         break;
     case QP_FALSE:
-        printf("FALSE");
+        fprintf(stream, "false");
         break;
     case QP_NULL:
-        printf("NULL");
+        fprintf(stream, "null");
         break;
     case QP_ARRAY0:
     case QP_ARRAY1:
@@ -974,18 +999,18 @@ static qp_types_t QP_print_unpacker(
     case QP_ARRAY3:
     case QP_ARRAY4:
     case QP_ARRAY5:
-        printf("[");
+        fprintf(stream, "[");
         count = tp - QP_ARRAY0;
         tp = qp_next(unpacker, qp_obj);
         for (found = 0; count-- && tp; found = 1)
         {
             if (found )
             {
-                printf(", ");
+                fprintf(stream, ",");
             }
-            tp = QP_print_unpacker(tp, unpacker, qp_obj);
+            tp = QP_print_unpacker(stream, tp, unpacker, qp_obj);
         }
-        printf("]");
+        fprintf(stream, "]");
         return tp;
     case QP_MAP0:
     case QP_MAP1:
@@ -993,48 +1018,48 @@ static qp_types_t QP_print_unpacker(
     case QP_MAP3:
     case QP_MAP4:
     case QP_MAP5:
-        printf("{");
+        fprintf(stream, "{");
         count = tp - QP_MAP0;
         tp = qp_next(unpacker, qp_obj);
         for (found = 0; count-- && tp; found = 1)
         {
             if (found )
             {
-                printf(", ");
+                fprintf(stream, ",");
             }
-            tp = QP_print_unpacker(tp, unpacker, qp_obj);
-            printf(": ");
-            tp = QP_print_unpacker(tp, unpacker, qp_obj);
+            tp = QP_print_unpacker(stream, tp, unpacker, qp_obj);
+            fprintf(stream, ":");
+            tp = QP_print_unpacker(stream, tp, unpacker, qp_obj);
         }
-        printf("}");
+        fprintf(stream, "}");
         return tp;
     case QP_ARRAY_OPEN:
-        printf("[");
+        fprintf(stream, "[");
         tp = qp_next(unpacker, qp_obj);
         for (count = 0; tp && tp != QP_ARRAY_CLOSE; count = 1)
         {
             if (count)
             {
-                printf(", ");
+                fprintf(stream, ",");
             }
-            tp = QP_print_unpacker(tp, unpacker, qp_obj);
+            tp = QP_print_unpacker(stream, tp, unpacker, qp_obj);
         }
-        printf("]");
+        fprintf(stream, "]");
         break;
     case QP_MAP_OPEN:
-        printf("{");
+        fprintf(stream, "{");
         tp = qp_next(unpacker, qp_obj);
         for (count = 0; tp && tp != QP_MAP_CLOSE; count = 1)
         {
             if (count)
             {
-                printf(", ");
+                fprintf(stream, ",");
             }
-            tp = QP_print_unpacker(tp, unpacker, qp_obj);
-            printf(": ");
-            tp = QP_print_unpacker(tp, unpacker, qp_obj);
+            tp = QP_print_unpacker(stream, tp, unpacker, qp_obj);
+            fprintf(stream, ":");
+            tp = QP_print_unpacker(stream, tp, unpacker, qp_obj);
         }
-        printf("}");
+        fprintf(stream, "}");
         break;
     default:
         break;

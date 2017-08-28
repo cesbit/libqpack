@@ -1,6 +1,13 @@
+libqpack (0.10.1)
+
+  * Added qp_fprint() for printing qp data to a stream. As far as possible
+    the output is made JSON compatible.
+
+ -- Jeroen van der Heijden <jeroen@transceptor.technology>  28 Aug 2017
+
 libqpack (0.10.0)
 
-  * Addedd __cplusplus macro for c++ compatibility.
+  * Added __cplusplus macro for c++ compatibility.
 
   * Renamed qp_res_via_t member bool to boolean.
 

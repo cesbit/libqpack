@@ -10,7 +10,7 @@
 
 #define QP_VERSION_MAJOR 0
 #define QP_VERSION_MINOR 10
-#define QP_VERSION_PATCH 0
+#define QP_VERSION_PATCH 1
 
 #define QP_STRINGIFY(num) #num
 #define QP_VERSION_STR(major,minor,patch)   \
@@ -265,9 +265,16 @@ extern int qp_is_raw_equal(qp_obj_t * obj, const char * str);
 
 /* print */
 void qp_print(const unsigned char * data, size_t len);
-#define qp_packer_print(packer) qp_print(packer->buffer, packer->len)
+void qp_fprint(FILE * stream, const unsigned char * data, size_t len);
+
+#define qp_packer_print(packer) \
+    qp_print(packer->buffer, packer->len)
+#define qp_packer_fprint(stream, packer) \
+    qp_fprint(stream, packer->buffer, packer->len)
 #define qp_unpacker_print(unpacker) \
     qp_print(unpacker->start, unpacker->end - unpacker->start)
+#define qp_unpacker_fprint(stream, unpacker) \
+    qp_fprint(stream, unpacker->start, unpacker->end - unpacker->start)
 
 /* misc functions */
 const char * qp_strerror(int err_code);

@@ -20,7 +20,7 @@ int main(void)
 
     packer = qp_packer_create(512);
     qp_add_map(&packer);
-    qp_add_raw(packer, "Hi Qpack", strlen("Hi Qpack"));
+    qp_add_raw(packer, "Hi \"Qpack\"", strlen("Hi \"Qpack\""));
     qp_add_array(&packer);
     qp_add_array(&packer);
     qp_add_array(&packer);
