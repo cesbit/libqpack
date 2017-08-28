@@ -39,3 +39,6 @@
 .settings/
 .project
 .cproject
+
+# VSCode
+.vscode/

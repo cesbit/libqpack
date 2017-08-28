@@ -8,6 +8,7 @@
 #include <qpack.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 int main(void)
 {
@@ -34,6 +35,13 @@ int main(void)
     qp_close_array(packer);
     qp_close_map(packer);
     qp_packer_print(packer);
+
+    char * tmp = qp_packer_sprint(packer);
+    if (tmp != NULL)
+    {
+        printf("As string: %s\n", tmp);
+        free(tmp);
+    }
 
     qp_unpacker_init(&unpacker, packer->buffer, packer->len);
 

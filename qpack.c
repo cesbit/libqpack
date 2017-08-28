@@ -13,6 +13,9 @@
 
 #define QP__INITIAL_NEST_SIZE 2
 #define QP__INITIAL_ALLOC_SZ 8
+#define QP__CHKN if (n < 0) return QP_ERR; *pt += n;
+#define QP__CHKT if (tp == QP_ERR) return QP_ERR;
+#define QP__MINSZ 16
 
 #define QP__RETURN_INC_C                                                \
     if (packer->depth) packer->nesting[packer->depth - 1].n++;          \
@@ -118,6 +121,19 @@ static qp_types_t QP_print_unpacker(
 static void QP_fprint_raw(FILE * stream, const char * s, size_t n);
 static int QP_res(qp_unpacker_t * unpacker, qp_res_t * res, qp_obj_t * val);
 static void QP_res_destroy(qp_res_t * res);
+static qp_types_t QP_sprint_unpacker(
+        char ** s,
+        size_t * sz,
+        char ** pt,
+        qp_types_t tp,
+        qp_unpacker_t * unpacker,
+        qp_obj_t * qp_obj);
+static int QP_sprint_raw(
+        char ** s,
+        size_t * sz,
+        char * pt,
+        const char * d,
+        size_t n);
 
 qp_packer_t * qp_packer_create(size_t alloc_size)
 {
@@ -948,6 +964,42 @@ void qp_fprint(FILE * stream, const unsigned char * data, size_t len)
     QP_print_unpacker(stream, qp_next(&unpacker, &qp_obj), &unpacker, &qp_obj);
 }
 
+char * qp_sprint(const unsigned char * data, size_t len)
+{
+    size_t sz = QP__MINSZ + len * 2;
+    char * s = (char *) malloc(sz);
+    if (s != NULL)
+    {
+        char * pt;
+        qp_obj_t qp_obj;
+        qp_unpacker_t unpacker;
+        qp_unpacker_init(&unpacker, data, len);
+        pt = s;
+        if (QP_sprint_unpacker(
+                &s,
+                &sz,
+                &pt,
+                qp_next(&unpacker, &qp_obj),
+                &unpacker, &qp_obj) != QP_ERR)
+        {
+            *pt = '\0';
+            sz = pt - s + 1;
+            char * tmp = (char *) realloc(s, sz);
+            if (tmp == NULL)
+            {
+                free(s);
+            }
+            s = tmp;
+        }
+        else
+        {
+            free(s);
+            s = NULL;
+        }
+    }
+    return s;
+}
+
 static void QP_fprint_raw(FILE * stream, const char * s, size_t n)
 {
     fputc('"', stream);
@@ -1064,6 +1116,157 @@ static qp_types_t QP_print_unpacker(
     default:
         break;
     }
+    return qp_next(unpacker, qp_obj);
+}
+
+static int QP_sprint_raw(
+        char ** s,
+        size_t * sz,
+        char * pt,
+        const char * d,
+        size_t n)
+{
+    int m = 0;
+    size_t trigger = *sz - (pt - *s) - QP__MINSZ;
+
+    pt[m++] = '"';
+    for (size_t i = 0; i < n; i++)
+    {
+        if (m >= trigger)
+        {
+            *sz += QP__MINSZ;
+            trigger += QP__MINSZ;
+            char * tmp = (char *) realloc(*s, *sz);
+            if (tmp == NULL)
+            {
+                return -1;
+            }
+        }
+        char c = d[i];
+        switch (c)
+        {
+        case '"':
+        case '\\':
+            pt[m++] = '\\';
+        }
+        pt[m++] = c;
+    }
+    pt[m++] = '"';
+    return m;
+}
+
+static qp_types_t QP_sprint_unpacker(
+        char ** s,
+        size_t * sz,
+        char ** pt,
+        qp_types_t tp,
+        qp_unpacker_t * unpacker,
+        qp_obj_t * qp_obj)
+{
+    int n;
+    if (*sz - (*pt - *s) < QP__MINSZ)
+    {
+        *sz += QP__MINSZ + (unpacker->end - unpacker->pt) * 2;
+        char * tmp = (char *) realloc(*s, *sz);
+        if (tmp == NULL)
+        {
+            return QP_ERR;
+        }
+    }
+    int count;
+    int found;
+    switch (tp)
+    {
+    case QP_INT64:
+        n = sprintf(*pt, "%" PRId64, qp_obj->via.int64); QP__CHKN
+        break;
+    case QP_DOUBLE:
+        n = sprintf(*pt, "%f", qp_obj->via.real); QP__CHKN
+        break;
+    case QP_RAW:
+        n = QP_sprint_raw(s, sz, *pt, qp_obj->via.raw, qp_obj->len); QP__CHKN
+        break;
+    case QP_TRUE:
+        n = sprintf(*pt, "true"); QP__CHKN
+        break;
+    case QP_FALSE:
+        n = sprintf(*pt, "false"); QP__CHKN
+        break;
+    case QP_NULL:
+        n = sprintf(*pt, "null"); QP__CHKN
+        break;
+    case QP_ARRAY0:
+    case QP_ARRAY1:
+    case QP_ARRAY2:
+    case QP_ARRAY3:
+    case QP_ARRAY4:
+    case QP_ARRAY5:
+        n = sprintf(*pt, "["); QP__CHKN
+        count = tp - QP_ARRAY0;
+        tp = qp_next(unpacker, qp_obj); QP__CHKT
+        for (found = 0; count-- && tp; found = 1)
+        {
+            if (found )
+            {
+                n = sprintf(*pt, ","); QP__CHKN
+            }
+            tp = QP_sprint_unpacker(s, sz, pt, tp, unpacker, qp_obj); QP__CHKT
+        }
+        n = sprintf(*pt, "]"); QP__CHKN
+        return tp;
+    case QP_MAP0:
+    case QP_MAP1:
+    case QP_MAP2:
+    case QP_MAP3:
+    case QP_MAP4:
+    case QP_MAP5:
+        n = sprintf(*pt, "{"); QP__CHKN
+        count = tp - QP_MAP0;
+        tp = qp_next(unpacker, qp_obj); QP__CHKT
+        for (found = 0; count-- && tp; found = 1)
+        {
+            if (found )
+            {
+                n = sprintf(*pt, ","); QP__CHKN
+            }
+            tp = QP_sprint_unpacker(s, sz, pt, tp, unpacker, qp_obj); QP__CHKT
+            n = sprintf(*pt, ":"); QP__CHKN
+            tp = QP_sprint_unpacker(s, sz, pt, tp, unpacker, qp_obj); QP__CHKT
+        }
+        n = sprintf(*pt, "}"); QP__CHKN
+        return tp;
+    case QP_ARRAY_OPEN:
+        n = sprintf(*pt, "["); QP__CHKN
+        tp = qp_next(unpacker, qp_obj); QP__CHKT
+        for (count = 0; tp && tp != QP_ARRAY_CLOSE; count = 1)
+        {
+            if (count)
+            {
+                n = sprintf(*pt, ","); QP__CHKN
+            }
+            tp = QP_sprint_unpacker(s, sz, pt, tp, unpacker, qp_obj); QP__CHKT
+        }
+        n = sprintf(*pt, "]"); QP__CHKN
+        break;
+    case QP_MAP_OPEN:
+        n = sprintf(*pt, "{"); QP__CHKN
+        tp = qp_next(unpacker, qp_obj); QP__CHKT
+        for (count = 0; tp && tp != QP_MAP_CLOSE; count = 1)
+        {
+            if (count)
+            {
+                n = sprintf(*pt, ","); QP__CHKN
+            }
+            tp = QP_sprint_unpacker(s, sz, pt, tp, unpacker, qp_obj); QP__CHKT
+            n = sprintf(*pt, ":"); QP__CHKN
+            tp = QP_sprint_unpacker(s, sz, pt, tp, unpacker, qp_obj); QP__CHKT
+        }
+        n = sprintf(*pt, "}"); QP__CHKN
+        break;
+    default:
+        break;
+    }
+
     return qp_next(unpacker, qp_obj);
 }
 
