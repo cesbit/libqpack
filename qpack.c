@@ -16,6 +16,7 @@
 #define QP__CHKN if (n < 0) return QP_ERR; *pt += n;
 #define QP__CHKT if (tp == QP_ERR) return QP_ERR;
 #define QP__MINSZ 16
+#define QP__FACTOR 1.4
 
 #define QP__RETURN_INC_C                                                \
     if (packer->depth) packer->nesting[packer->depth - 1].n++;          \
@@ -131,7 +132,7 @@ static qp_types_t QP_sprint_unpacker(
 static int QP_sprint_raw(
         char ** s,
         size_t * sz,
-        char * pt,
+        size_t p,
         const char * d,
         size_t n);
 
@@ -966,7 +967,7 @@ void qp_fprint(FILE * stream, const unsigned char * data, size_t len)
 
 char * qp_sprint(const unsigned char * data, size_t len)
 {
-    size_t sz = QP__MINSZ + len * 2;
+    size_t sz = QP__MINSZ + len * QP__FACTOR;
     char * s = (char *) malloc(sz);
     if (s != NULL)
     {
@@ -1122,37 +1123,39 @@ static qp_types_t QP_print_unpacker(
 static int QP_sprint_raw(
         char ** s,
         size_t * sz,
-        char * pt,
+        size_t p,
         const char * d,
         size_t n)
 {
-    int m = 0;
-    size_t trigger = *sz - (pt - *s) - QP__MINSZ;
-
-    pt[m++] = '"';
-    for (size_t i = 0; i < n; i++)
+    size_t i;
+    size_t pos = p;
+    (*s)[pos++] = '"';
+    for (i = 0; i < n; i++)
     {
-        if (m >= trigger)
+        char c = d[i];
+
+        if (pos >= *sz - 40)
         {
-            *sz += QP__MINSZ;
-            trigger += QP__MINSZ;
-            char * tmp = (char *) realloc(*s, *sz);
+            char * tmp;
+            *sz += QP__MINSZ + (n - i) * QP__FACTOR;
+            tmp = (char *) realloc(*s, *sz);
             if (tmp == NULL)
             {
                 return -1;
             }
+            *s = tmp;
         }
-        char c = d[i];
+
         switch (c)
         {
         case '"':
         case '\\':
-            pt[m++] = '\\';
+            (*s)[pos++] = '\\';
         }
-        pt[m++] = c;
+        (*s)[pos++] = c;
     }
-    pt[m++] = '"';
-    return m;
+    (*s)[pos++] = '"';
+    return pos - p;
 }
 
 static qp_types_t QP_sprint_unpacker(
@@ -1163,18 +1166,20 @@ static qp_types_t QP_sprint_unpacker(
         qp_unpacker_t * unpacker,
         qp_obj_t * qp_obj)
 {
-    int n;
-    if (*sz - (*pt - *s) < QP__MINSZ)
+    int n, count, found;
+    size_t pos = *pt - *s;
+    if (*sz - pos < QP__MINSZ)
     {
-        *sz += QP__MINSZ + (unpacker->end - unpacker->pt) * 2;
-        char * tmp = (char *) realloc(*s, *sz);
+        char * tmp;
+        *sz += QP__MINSZ + (unpacker->end - unpacker->pt) * QP__FACTOR;
+        tmp = (char *) realloc(*s, *sz);
         if (tmp == NULL)
         {
             return QP_ERR;
         }
+        *s = tmp;
+        *pt = *s + pos;
     }
-    int count;
-    int found;
     switch (tp)
     {
     case QP_INT64:
@@ -1184,7 +1189,7 @@ static qp_types_t QP_sprint_unpacker(
         n = sprintf(*pt, "%f", qp_obj->via.real); QP__CHKN
         break;
     case QP_RAW:
-        n = QP_sprint_raw(s, sz, *pt, qp_obj->via.raw, qp_obj->len); QP__CHKN
+        n = QP_sprint_raw(s, sz, pos, qp_obj->via.raw, qp_obj->len); QP__CHKN
         break;
     case QP_TRUE:
         n = sprintf(*pt, "true"); QP__CHKN
