@@ -19,22 +19,31 @@ endif
 
 -include ../makefile.defs
 
+OS := $(shell uname)
+ifeq ($(OS),Darwin)
+FN := libqpack.dylib
+INSTALL_PATH := /usr/local
+else
+FN := libqpack.so
+INSTALL_PATH := /usr
+endif
+
 # Add inputs and outputs from these tool invocations to the build variables
 
 # All Target
-all: libqpack.so
+all: libqpack
 
 # Tool invocations
-libqpack.so: $(OBJS) $(USER_OBJS)
+libqpack: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: Cross GCC Linker'
-	gcc -shared -o "libqpack.so" $(OBJS) $(USER_OBJS) $(LIBS)
+	gcc -shared -o $(FN) $(OBJS) $(USER_OBJS) $(LIBS) $(LDFLAGS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) $(LIBRARIES)$(OBJS)$(C_DEPS) libqpack.so
+	-$(RM) $(LIBRARIES)$(OBJS)$(C_DEPS) $(FN)
 	-@echo ' '
 
 .PHONY: all clean dependents

@@ -1,9 +1,9 @@
 .PHONY: install
 install:
-	@cp ../qpack.h /usr/include/qpack.h
-	@cp libqpack.so /usr/lib/x86_64-linux-gnu/libqpack.so
+	@cp ../qpack.h $(INSTALL_PATH)/include/qpack.h
+	@cp $(FN) $(INSTALL_PATH)/lib/$(FN)
 
 .PHONY: uninstall
 uninstall:
-	@rm -f /usr/include/qpack.h
-	@rm -f /usr/lib/x86_64-linux-gnu/libqpack.so
+	@rm -f $(INSTALL_PATH)/include/qpack.h
+	@rm -f $(INSTALL_PATH)/lib/$(FN)
