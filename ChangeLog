@@ -3,7 +3,7 @@ libqpack (0.10.2)
   * Added qp_sprint() for printing qp data to a string. Like qp_fprint() the
     output is made JSON compatible if possible.
 
- -- Jeroen van der Heijden <jeroen@transceptor.technology>  28 Aug 2017
+ -- Jeroen van der Heijden <jeroen@transceptor.technology>  31 Aug 2017
 
 libqpack (0.10.1)
 
