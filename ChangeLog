@@ -1,3 +1,9 @@
+libqpack (0.10.4)
+
+  * Added CFLAGS.
+
+ -- Jeroen van der Heijden <jeroen@transceptor.technology>  31 Aug 2017
+
 libqpack (0.10.3)
 
   * Make build script platform independent.
