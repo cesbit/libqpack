@@ -967,6 +967,10 @@ void qp_fprint(FILE * stream, const unsigned char * data, size_t len)
 
 char * qp_sprint(const unsigned char * data, size_t len)
 {
+    if (!len)
+    {
+        return NULL;
+    }
     size_t sz = QP__MINSZ + len * QP__FACTOR;
     char * s = (char *) malloc(sz);
     if (s != NULL)
@@ -1134,7 +1138,7 @@ static int QP_sprint_raw(
     {
         char c = d[i];
 
-        if (pos >= *sz - 40)
+        if (pos >= (*sz) - 3)
         {
             char * tmp;
             *sz += QP__MINSZ + (n - i) * QP__FACTOR;
@@ -1167,8 +1171,8 @@ static qp_types_t QP_sprint_unpacker(
         qp_obj_t * qp_obj)
 {
     int n, count, found;
-    size_t pos = *pt - *s;
-    if (*sz - pos < QP__MINSZ)
+    size_t pos = (*pt) - (*s);
+    if ((*sz) - pos < QP__MINSZ)
     {
         char * tmp;
         *sz += QP__MINSZ + (unpacker->end - unpacker->pt) * QP__FACTOR;
@@ -1178,7 +1182,7 @@ static qp_types_t QP_sprint_unpacker(
             return QP_ERR;
         }
         *s = tmp;
-        *pt = *s + pos;
+        *pt = (*s) + pos;
     }
     switch (tp)
     {
@@ -1545,9 +1549,9 @@ static int QP_res(qp_unpacker_t * unpacker, qp_res_t * res, qp_obj_t * val)
 
                 if (res->via.map->n > *sz)
                 {
-                    *sz = (*sz) ? *sz * 2: QP__INITIAL_ALLOC_SZ;
+                    *sz = (*sz) ? (*sz) * 2: QP__INITIAL_ALLOC_SZ;
 
-                    tmp = (qp_res_t *) realloc(*rs, sizeof(qp_res_t) * *sz);
+                    tmp = (qp_res_t *) realloc(*rs, sizeof(qp_res_t) * (*sz));
 
                     if (tmp == NULL)
                     {
