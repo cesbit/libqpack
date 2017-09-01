@@ -1007,8 +1007,9 @@ char * qp_sprint(const unsigned char * data, size_t len)
 
 static void QP_fprint_raw(FILE * stream, const char * s, size_t n)
 {
+    size_t i;
     fputc('"', stream);
-    for (size_t i = 0; i < n; i++)
+    for (i = 0; i < n; i++)
     {
         char c = s[i];
         switch (c)
