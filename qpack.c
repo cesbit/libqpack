@@ -184,7 +184,7 @@ const char * qp_strerror(int err_code)
     }
 }
 
-inline const char * qp_version(void)
+const char * qp_version(void)
 {
     return QP_VERSION;
 }
@@ -768,55 +768,7 @@ qp_types_t qp_next(qp_unpacker_t * unpacker, qp_obj_t * qp_obj)
     return QP_ERR;
 }
 
-
-inline int qp_is_array(qp_types_t tp)
-{
-    return tp == QP_ARRAY_OPEN || (tp >= QP_ARRAY0 && tp <= QP_ARRAY5);
-}
-
-inline int qp_is_map(qp_types_t tp)
-{
-    return tp == QP_MAP_OPEN || (tp >= QP_MAP0 && tp <= QP_MAP5);
-}
-
-inline int qp_is_close(qp_types_t tp)
-{
-    return tp == QP_ARRAY_CLOSE || tp == QP_MAP_CLOSE;
-}
-
-inline int qp_is_int(qp_types_t tp)
-{
-    return tp == QP_INT64;
-}
-
-inline int qp_is_double(qp_types_t tp)
-{
-    return tp == QP_DOUBLE;
-}
-
-inline int qp_is_bool(qp_types_t tp)
-{
-    return tp == QP_TRUE || tp == QP_FALSE;
-}
-
-inline int qp_is_null(qp_types_t tp)
-{
-    return tp == QP_NULL;
-}
-
-inline int qp_is_raw(qp_types_t tp)
-{
-    return tp == QP_RAW;
-}
-
-inline int qp_is_raw_term(qp_obj_t * qp_obj)
-{
-    return (qp_obj->tp == QP_RAW &&
-            qp_obj->len &&
-            qp_obj->via.raw[qp_obj->len - 1] == '\0');
-}
-
-inline int qp_raw_is_equal(qp_obj_t * obj, const char * str)
+int qp_raw_is_equal(qp_obj_t * obj, const char * str)
 {
     return
         strlen(str) == obj->len &&
@@ -832,7 +784,8 @@ void qp_res_destroy(qp_res_t * res)
 
 int qp_res_fprint(qp_res_t * res, FILE * stream)
 {
-    int i, rc = 0;
+    size_t i;
+    int rc = 0;
     switch(res->tp)
     {
     case QP_RES_ARRAY:
@@ -1609,7 +1562,7 @@ static int QP_res(qp_unpacker_t * unpacker, qp_res_t * res, qp_obj_t * val)
 
 static void QP_res_destroy(qp_res_t * res)
 {
-    int i;
+    size_t i;
     switch(res->tp)
     {
     case QP_RES_ARRAY:

@@ -10,7 +10,7 @@
 
 #define QP_VERSION_MAJOR 0
 #define QP_VERSION_MINOR 10
-#define QP_VERSION_PATCH 4
+#define QP_VERSION_PATCH 5
 
 #define QP_STRINGIFY(num) #num
 #define QP_VERSION_STR(major,minor,patch)   \
@@ -252,16 +252,53 @@ void qp_res_destroy(qp_res_t * res);
 int qp_res_fprint(qp_res_t * res, FILE * stream);
 
 /* test functions for qp_obj_t */
-extern int qp_is_array(qp_types_t tp);
-extern int qp_is_map(qp_types_t tp);
-extern int qp_is_close(qp_types_t tp);
-extern int qp_is_int(qp_types_t tp);
-extern int qp_is_double(qp_types_t tp);
-extern int qp_is_bool(qp_types_t tp);
-extern int qp_is_null(qp_types_t tp);
-extern int qp_is_raw(qp_types_t tp);
-extern int qp_is_raw_term(qp_obj_t * qp_obj);
-extern int qp_is_raw_equal(qp_obj_t * obj, const char * str);
+static inline int qp_is_array(qp_types_t tp)
+{
+    return tp == QP_ARRAY_OPEN || (tp >= QP_ARRAY0 && tp <= QP_ARRAY5);
+}
+
+static inline int qp_is_map(qp_types_t tp)
+{
+    return tp == QP_MAP_OPEN || (tp >= QP_MAP0 && tp <= QP_MAP5);
+}
+
+static inline int qp_is_close(qp_types_t tp)
+{
+    return tp == QP_ARRAY_CLOSE || tp == QP_MAP_CLOSE;
+}
+
+static inline int qp_is_int(qp_types_t tp)
+{
+    return tp == QP_INT64;
+}
+
+static inline int qp_is_double(qp_types_t tp)
+{
+    return tp == QP_DOUBLE;
+}
+
+static inline int qp_is_bool(qp_types_t tp)
+{
+    return tp == QP_TRUE || tp == QP_FALSE;
+}
+
+static inline int qp_is_null(qp_types_t tp)
+{
+    return tp == QP_NULL;
+}
+
+static inline int qp_is_raw(qp_types_t tp)
+{
+    return tp == QP_RAW;
+}
+
+static inline int qp_is_raw_term(qp_obj_t * qp_obj)
+{
+    return (qp_obj->tp == QP_RAW &&
+            qp_obj->len &&
+            qp_obj->via.raw[qp_obj->len - 1] == '\0');
+}
+int qp_raw_is_equal(qp_obj_t * obj, const char * str);
 
 /* print */
 void qp_print(const unsigned char * data, size_t len);

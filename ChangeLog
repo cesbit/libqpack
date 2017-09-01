@@ -1,3 +1,9 @@
+libqpack (0.10.5)
+
+  * Inline functions for checks and fixed compile warnings.
+
+ -- Jeroen van der Heijden <jeroen@transceptor.technology>  01 Sep 2017
+
 libqpack (0.10.4)
 
   * Added CFLAGS.
