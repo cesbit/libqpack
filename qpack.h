@@ -10,7 +10,7 @@
 
 #define QP_VERSION_MAJOR 0
 #define QP_VERSION_MINOR 10
-#define QP_VERSION_PATCH 5
+#define QP_VERSION_PATCH 6
 
 #define QP_STRINGIFY(num) #num
 #define QP_VERSION_STR(major,minor,patch)   \

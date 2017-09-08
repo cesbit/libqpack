@@ -1,3 +1,9 @@
+libqpack (0.10.6)
+
+  * Fixed bug in length check for unpacking strings.
+
+ -- Jeroen van der Heijden <jeroen@transceptor.technology>  08 Sep 2017
+
 libqpack (0.10.5)
 
   * Inline functions for checks and fixed compile warnings.
