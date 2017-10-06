@@ -421,6 +421,7 @@ void qp_unpacker_init(
     unpacker->start = pt;
     unpacker->pt = pt;
     unpacker->end = pt + len;
+    unpacker->flags = 0;
 }
 
 qp_types_t qp_next(qp_unpacker_t * unpacker, qp_obj_t * qp_obj)
@@ -808,6 +809,12 @@ int qp_res_fprint(qp_res_t * res, FILE * stream)
         break;
     case QP_RES_STR:
         if (fprintf(stream, "%s", res->via.str) < 0)
+        {
+            return QP_ERR_WRITE_STREAM;
+        }
+        break;
+    case QP_RES_RAW:
+        if (fprintf(stream, "%.*s", res->via.raw->n, res->via.raw->raw) < 0)
         {
             return QP_ERR_WRITE_STREAM;
         }
@@ -1243,6 +1250,19 @@ static int QP_res(qp_unpacker_t * unpacker, qp_res_t * res, qp_obj_t * val)
     switch((qp_types_t) val->tp)
     {
     case QP_RAW:
+        if (unpacker->flags & QP_UNPACK_FLAG_RAW)
+        {
+            res->tp = QP_RES_RAW;
+            res->via.raw = (qp_raw_t *) malloc(sizeof(qp_raw_t));
+            if (res->via.raw == NULL)
+            {
+                return QP_ERR_ALLOC;
+            }
+            res->via.raw->n = val->len;
+            res->via.raw->data = val->via.raw;
+            return 0;
+        }
+
         res->tp = QP_RES_STR;
         res->via.str = strndup(val->via.raw, val->len);
         return (res->via.str == NULL) ? QP_ERR_ALLOC : 0;
@@ -1572,6 +1592,9 @@ static void QP_res_destroy(qp_res_t * res)
         }
         free(res->via.array->values);
         free(res->via.array);
+        break;
+    case QP_RES_RAW:
+        free(res->via.raw);
         break;
     case QP_RES_STR:
         free(res->via.str);

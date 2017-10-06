@@ -12,6 +12,8 @@
 #define QP_VERSION_MINOR 10
 #define QP_VERSION_PATCH 6
 
+#define QP_UNPACK_FLAG_RAW 1
+
 #define QP_STRINGIFY(num) #num
 #define QP_VERSION_STR(major,minor,patch)   \
     QP_STRINGIFY(major) "."                 \
@@ -36,6 +38,7 @@ typedef struct qp_unpacker_s qp_unpacker_t;
 typedef struct qp_res_s qp_res_t;
 typedef struct qp_map_s qp_map_t;
 typedef struct qp_array_s qp_array_t;
+typedef struct qp_raw_s qp_raw_t;
 
 /* private typemap */
 enum
@@ -107,6 +110,7 @@ typedef enum qp_res_e
     QP_RES_INT64,
     QP_RES_REAL,
     QP_RES_STR,
+    QP_RES_RAW,
     QP_RES_BOOL,
     QP_RES_NULL,
 } qp_res_tp;
@@ -173,10 +177,17 @@ struct qp_array_s
     qp_res_t * values;
 };
 
+struct qp_raw_s
+{
+    size_t n;
+    unsigned char * data;
+};
+
 union qp_res_u
 {
     qp_map_t * map;
     qp_array_t * array;
+    qp_raw_t * raw;
     char * str;
     int64_t int64;
     double real;
@@ -213,6 +224,7 @@ struct qp_unpacker_s
     const unsigned char * start;
     const unsigned char * pt;
     const unsigned char * end;
+    unsigned char flags;
 };
 
 #ifdef __cplusplus
