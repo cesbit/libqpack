@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define QP__INITIAL_NEST_SIZE 2
+#define QP__INITIAL_NEST_SIZE 4
 #define QP__INITIAL_ALLOC_SZ 8
 #define QP__CHKN if (n < 0) return QP_ERR; *pt += n;
 #define QP__CHKT if (tp == QP_ERR) return QP_ERR;
@@ -877,9 +877,6 @@ qp_res_t * qp_unpacker_res(qp_unpacker_t * unpacker, int * rc)
     qp_res_t * res;
     qp_types_t tp;
     qp_obj_t val;
-
-    /* make sure we are at start */
-    unpacker->pt = unpacker->start;
 
     tp = qp_next(unpacker, &val);
     if (tp == QP_END ||

@@ -10,7 +10,7 @@
 
 #define QP_VERSION_MAJOR 0
 #define QP_VERSION_MINOR 10
-#define QP_VERSION_PATCH 6
+#define QP_VERSION_PATCH 7
 
 #define QP_UNPACK_FLAG_RAW 1
 
