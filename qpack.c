@@ -871,9 +871,6 @@ qp_res_t * qp_unpacker_res(qp_unpacker_t * unpacker, int * rc)
     qp_types_t tp;
     qp_obj_t val;
 
-    /* make sure we are at start */
-    unpacker->pt = unpacker->start;
-
     tp = qp_next(unpacker, &val);
     if (tp == QP_END ||
         tp == QP_ERR ||
