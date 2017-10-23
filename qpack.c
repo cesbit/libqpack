@@ -1250,13 +1250,13 @@ static int QP_res(qp_unpacker_t * unpacker, qp_res_t * res, qp_obj_t * val)
         if (unpacker->flags & QP_UNPACK_FLAG_RAW)
         {
             res->tp = QP_RES_RAW;
-            res->via.raw = (qp_raw_t *) malloc(sizeof(qp_raw_t));
+            res->via.raw = (qp_raw_t *) malloc(sizeof(qp_raw_t) + val->len);
             if (res->via.raw == NULL)
             {
                 return QP_ERR_ALLOC;
             }
             res->via.raw->n = val->len;
-            res->via.raw->data = val->via.raw;
+            memcpy(res->via.raw->data, val->via.raw, val->len);
             return 0;
         }
 

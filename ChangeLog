@@ -1,3 +1,9 @@
+libqpack (0.10.7)
+
+  * De not reset unpacker on qp_unpacker_res().
+
+ -- Jeroen van der Heijden <jeroen@transceptor.technology>  17 Okt 2017
+
 libqpack (0.10.6)
 
   * Fixed bug in length check for unpacking strings.

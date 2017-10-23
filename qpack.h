@@ -180,7 +180,7 @@ struct qp_array_s
 struct qp_raw_s
 {
     size_t n;
-    unsigned char * data;
+    unsigned char data[];
 };
 
 union qp_res_u
