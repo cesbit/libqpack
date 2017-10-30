@@ -1,6 +1,18 @@
+libqpack (0.11.0)
+
+  * Added optional raw unpacking instead of null terminated strings.
+
+  * Added fadd functions for writing to a FILE pointer.
+
+  * Changed raw data to unsigned char.
+
+  * Added shortcut for adding strings as raw data.
+
+ -- Jeroen van der Heijden <jeroen@transceptor.technology>  30 Okt 2017
+
 libqpack (0.10.7)
 
-  * De not reset unpacker on qp_unpacker_res().
+  * Do not reset unpacker on qp_unpacker_res().
 
  -- Jeroen van der Heijden <jeroen@transceptor.technology>  17 Okt 2017
 

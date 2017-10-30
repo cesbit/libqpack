@@ -9,10 +9,12 @@
 #define QPACK_H_
 
 #define QP_VERSION_MAJOR 0
-#define QP_VERSION_MINOR 10
-#define QP_VERSION_PATCH 7
+#define QP_VERSION_MINOR 11
+#define QP_VERSION_PATCH 0
 
 #define QP_UNPACK_FLAG_RAW 1
+#define QP_UNPACK_FLAG_KEY_STR 2
+#define QP_UNPACK_FLAG__FORCE_STR 4
 
 #define QP_STRINGIFY(num) #num
 #define QP_VERSION_STR(major,minor,patch)   \
@@ -28,6 +30,7 @@
 #include <inttypes.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <string.h>
 
 typedef union qp_via_u qp_via_t;
 typedef union qp_res_u qp_res_via_t;
@@ -95,7 +98,8 @@ enum
 /* enums */
 typedef enum qp_err_e
 {
-    QP_ERR_WRITE_STREAM=-6,
+    QP_ERR_KEY_STR=-7,
+    QP_ERR_WRITE_STREAM,
     QP_ERR_NO_OPEN_ARRAY,
     QP_ERR_NO_OPEN_MAP,
     QP_ERR_MISSING_VALUE,
@@ -236,7 +240,7 @@ qp_packer_t * qp_packer_create(size_t alloc_size);
 void qp_packer_destroy(qp_packer_t * packer);
 
 /* add to packer functions */
-int qp_add_raw(qp_packer_t * packer, const char * raw, size_t len);
+int qp_add_raw(qp_packer_t * packer, const unsigned char * raw, size_t len);
 int qp_add_int64(qp_packer_t * packer, int64_t i);
 int qp_add_double(qp_packer_t * packer, double d);
 int qp_add_true(qp_packer_t * packer);
@@ -244,6 +248,14 @@ int qp_add_false(qp_packer_t * packer);
 int qp_add_null(qp_packer_t * packer);
 int qp_add_array(qp_packer_t ** packaddr);
 int qp_add_map(qp_packer_t ** packaddr);
+static inline int qp_add_raw_from_str(qp_packer_t * packer, const char * str);
+
+/* Add to file-packer functions */
+int qp_fadd_raw(FILE * f, const unsigned char * raw, size_t len);
+int qp_fadd_int64(FILE * f, int64_t i);
+static inline int qp_fadd_double(FILE * f, double d);
+static inline int qp_fadd_type(FILE * f, qp_types_t tp);
+static inline int qp_fadd_raw_from_str(FILE * f, const char * str);
 
 /* close array/map functions */
 int qp_close_array(qp_packer_t * packer);
@@ -317,18 +329,43 @@ void qp_print(const unsigned char * data, size_t len);
 void qp_fprint(FILE * stream, const unsigned char * data, size_t len);
 char * qp_sprint(const unsigned char * data, size_t len);
 
-#define qp_packer_print(packer) \
-    qp_print(packer->buffer, packer->len)
-#define qp_packer_fprint(stream, packer) \
-    qp_fprint(stream, packer->buffer, packer->len)
-#define qp_packer_sprint(packer) \
-    qp_sprint(packer->buffer, packer->len)
-#define qp_unpacker_print(unpacker) \
-    qp_print(unpacker->start, unpacker->end - unpacker->start)
-#define qp_unpacker_fprint(stream, unpacker) \
-    qp_fprint(stream, unpacker->start, unpacker->end - unpacker->start)
-#define qp_unpacker_sprint(unpacker) \
-    qp_sprint(unpacker->start, unpacker->end - unpacker->start)
+/* add shortcuts */
+static inline int qp_add_raw_from_str(qp_packer_t * packer, const char * str)
+{
+    return qp_add_raw(packer, (const unsigned char *) str, strlen(str));
+}
+
+static inline int qp_fadd_type(FILE * f, qp_types_t tp)
+{
+    return -(fputc(tp, f) == EOF);
+}
+
+static inline int qp_fadd_raw_from_str(FILE * f, const char * str)
+{
+    return qp_fadd_raw(f, (const unsigned char *) str, strlen(str));
+}
+
+static inline int qp_fadd_double(FILE * f, double d)
+{
+    return (d == 0.0) ? -(fputc(QP__DOUBLE_0, f) == EOF) :
+         (d == 1.0) ? -(fputc(QP__DOUBLE_1, f) == EOF) :
+         (d == -1.0) ? -(fputc(QP__DOUBLE_N1, f) == EOF) :
+         -(fputc(QP__DOUBLE, f) == EOF ||
+            fwrite(&d, sizeof(double), 1, f) != 1);
+}
+
+#define qp_packer_print(packer__) \
+    qp_print((packer__)->buffer, (packer__)->len)
+#define qp_packer_fprint(stream__, packer__) \
+    qp_fprint((stream__), (packer__)->buffer, (packer__)->len)
+#define qp_packer_sprint(packer__) \
+    qp_sprint((packer__)->buffer, (packer__)->len)
+#define qp_unpacker_print(unpacker__) \
+    qp_print((unpacker__)->start, (unpacker__)->end - (unpacker__)->start)
+#define qp_unpacker_fprint(stream__, unpacker__) \
+    qp_fprint((stream__), (unpacker__)->start, (unpacker__)->end - (unpacker__)->start)
+#define qp_unpacker_sprint(unpacker__) \
+    qp_sprint((unpacker__)->start, (unpacker__)->end - (unpacker__)->start)
 
 /* misc functions */
 const char * qp_strerror(int err_code);

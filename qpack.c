@@ -9,7 +9,6 @@
 #include <qpack.h>
 #include <assert.h>
 #include <stdlib.h>
-#include <string.h>
 
 #define QP__INITIAL_NEST_SIZE 4
 #define QP__INITIAL_ALLOC_SZ 8
@@ -114,12 +113,15 @@ if (unpacker->pt + size > unpacker->end)                                \
     return QP_ERR;                                                      \
 }
 
+typedef int (*QP_f)(qp_unpacker_t * unpacker, qp_res_t * res, qp_obj_t * val);
+
 static qp_types_t QP_print_unpacker(
         FILE * stream,
         qp_types_t tp,
         qp_unpacker_t * unpacker,
         qp_obj_t * qp_obj);
 static void QP_fprint_raw(FILE * stream, const char * s, size_t n);
+static int QP_res_str(qp_unpacker_t * unpacker, qp_res_t * res, qp_obj_t * val);
 static int QP_res(qp_unpacker_t * unpacker, qp_res_t * res, qp_obj_t * val);
 static void QP_res_destroy(qp_res_t * res);
 static qp_types_t QP_sprint_unpacker(
@@ -189,7 +191,7 @@ const char * qp_version(void)
     return QP_VERSION;
 }
 
-int qp_add_raw(qp_packer_t * packer, const char * raw, size_t len)
+int qp_add_raw(qp_packer_t * packer, const unsigned char * raw, size_t len)
 {
     size_t required_size = len + 9;
 
@@ -199,20 +201,20 @@ int qp_add_raw(qp_packer_t * packer, const char * raw, size_t len)
     {
         packer->buffer[packer->len++] = 128 + len;
     }
-    else if (len < 256)
+    else if (len <= UINT8_MAX)
     {
         uint8_t length = (uint8_t) len;
         packer->buffer[packer->len++] = QP__RAW8;
         packer->buffer[packer->len++] = length;
     }
-    else if (len < 65536)
+    else if (len <= UINT16_MAX)
     {
         uint16_t length = (uint16_t) len;
         packer->buffer[packer->len++] = QP__RAW16;
         memcpy(packer->buffer + packer->len, &length, 2);
         packer->len += 2;
     }
-    else if (len < 4294967296)
+    else if (len <= UINT32_MAX)
     {
         uint32_t length = (uint32_t) len;
         packer->buffer[packer->len++] = QP__RAW32;
@@ -230,6 +232,35 @@ int qp_add_raw(qp_packer_t * packer, const char * raw, size_t len)
     packer->len += len;
 
     QP__RETURN_INC_C
+}
+
+int qp_fadd_raw(FILE * f, const unsigned char * raw, size_t len)
+{
+    if (len < 100)
+    {
+        if (fputc(128 + len, f) == EOF) return EOF;
+    }
+    else if (len <= UINT8_MAX)
+    {
+        if (fputc(QP__RAW8, f) == EOF || fputc(len, f) == EOF) return EOF;
+    }
+    else if (len <= UINT16_MAX)
+    {
+        if (fputc(QP__RAW16, f) == EOF ||
+            fwrite(&len, sizeof(uint16_t), 1, f) != 1) return EOF;
+    }
+    else if (len <= UINT32_MAX)
+    {
+        if (fputc(QP__RAW32, f) == EOF ||
+            fwrite(&len, sizeof(uint32_t), 1, f) != 1) return EOF;
+    }
+    else
+    {
+        if (fputc(QP__RAW64, f) == EOF ||
+            fwrite(&len, sizeof(uint64_t), 1, f) != 1) return EOF;
+
+    }
+    return -(fwrite(raw, len, 1, f) != 1);
 }
 
 int qp_add_array(qp_packer_t ** packaddr)
@@ -385,6 +416,34 @@ int qp_add_int64(qp_packer_t * packer, int64_t i)
     QP__RETURN_INC_C
 }
 
+int qp_fadd_int64(FILE * f, int64_t i)
+{
+    int8_t i8;
+    if ((i8 = (int8_t) i) == i)
+    {
+        return (i >= 0 && i < 64) ? -(fputc(i, f) == EOF) :
+            (i >= -60 && i < 0) ? -(fputc(63 - i, f) == EOF) :
+            -(fputc(QP__INT8, f) == EOF || fputc(i, f) == EOF);
+    }
+
+    int16_t i16;
+    if ((i16 = (int16_t) i) == i)
+    {
+        return -(fputc(QP__INT16, f) == EOF ||
+                fwrite(&i, sizeof(int16_t), 1, f) != 1);
+    }
+
+    int32_t i32;
+    if ((i32 = (int32_t) i) == i)
+    {
+        return -(fputc(QP__INT32, f) == EOF ||
+                fwrite(&i, sizeof(int32_t), 1, f) != 1);
+    }
+
+    return -(fputc(QP__INT64, f) == EOF ||
+            fwrite(&i, sizeof(int64_t), 1, f) != 1);
+}
+
 int qp_add_double(qp_packer_t * packer, double d)
 {
     QP_RESIZE(9)
@@ -408,6 +467,8 @@ int qp_add_double(qp_packer_t * packer, double d)
     }
     QP__RETURN_INC_C
 }
+
+
 
 int qp_add_true(qp_packer_t * packer) QP_PLAIN_OBJ(QP__TRUE)
 int qp_add_false(qp_packer_t * packer) QP_PLAIN_OBJ(QP__FALSE)
@@ -814,7 +875,9 @@ int qp_res_fprint(qp_res_t * res, FILE * stream)
         }
         break;
     case QP_RES_RAW:
-        if (fprintf(stream, "%.*s", res->via.raw->n, res->via.raw->raw) < 0)
+        if (fprintf(
+                stream, "%.*s",
+                (int) res->via.raw->n, res->via.raw->data) < 0)
         {
             return QP_ERR_WRITE_STREAM;
         }
@@ -1237,8 +1300,17 @@ static qp_types_t QP_sprint_unpacker(
     return qp_next(unpacker, qp_obj);
 }
 
+static int QP_res_str(qp_unpacker_t * unpacker, qp_res_t * res, qp_obj_t * val)
+{
+    if (val->tp != QP_RAW) return QP_ERR_KEY_STR;
+    res->tp = QP_RES_STR;
+    res->via.str = strndup(val->via.raw, val->len);
+    return (res->via.str == NULL) ? QP_ERR_ALLOC : 0;
+}
+
 static int QP_res(qp_unpacker_t * unpacker, qp_res_t * res, qp_obj_t * val)
 {
+    QP_f f;
     int rc;
     size_t i, n, m;
     qp_types_t tp;
@@ -1247,6 +1319,7 @@ static int QP_res(qp_unpacker_t * unpacker, qp_res_t * res, qp_obj_t * val)
     switch((qp_types_t) val->tp)
     {
     case QP_RAW:
+        if (unpacker->flags & QP_UNPACK_FLAG_KEY_STR)
         if (unpacker->flags & QP_UNPACK_FLAG_RAW)
         {
             res->tp = QP_RES_RAW;
@@ -1358,11 +1431,18 @@ static int QP_res(qp_unpacker_t * unpacker, qp_res_t * res, qp_obj_t * val)
             {
                 tp = qp_next(unpacker, val);
 
+                f = ((unpacker->flags & QP_UNPACK_FLAG_KEY_STR) && kv) ?
+                    QP_res_str : QP_res;
+
                 if (tp == QP_END ||
                     tp == QP_ERR ||
                     tp == QP_HOOK ||
                     tp == QP_ARRAY_CLOSE ||
-                    tp == QP_MAP_CLOSE)
+                    tp == QP_MAP_CLOSE ||
+                    (rc = f(
+                        unpacker,
+                        (kv) ? res->via.map->keys + i : res->via.map->values + i,
+                        val)))
                 {
                     res->via.map->n = i;
                     if (!kv)
@@ -1370,14 +1450,6 @@ static int QP_res(qp_unpacker_t * unpacker, qp_res_t * res, qp_obj_t * val)
                         QP_res_destroy(res->via.map->keys + i);
                     }
                     return QP_ERR_CORRUPT;
-                }
-                if ((rc = QP_res(
-                        unpacker,
-                        (kv) ? res->via.map->keys + i : res->via.map->values + i,
-                        val)))
-                {
-                    res->via.map->n = i + 1;
-                    return rc;
                 }
             }
         }
@@ -1487,6 +1559,8 @@ static int QP_res(qp_unpacker_t * unpacker, qp_res_t * res, qp_obj_t * val)
 
                 if (kv)
                 {
+                    f = ((unpacker->flags & QP_UNPACK_FLAG_KEY_STR)) ?
+                        QP_res_str : QP_res;
                     if (tp == QP_END || tp == QP_MAP_CLOSE)
                     {
                         break;
@@ -1504,6 +1578,7 @@ static int QP_res(qp_unpacker_t * unpacker, qp_res_t * res, qp_obj_t * val)
                 }
                 else
                 {
+                    f = QP_res;
                     if (tp == QP_END ||
                         tp == QP_ERR ||
                         tp == QP_HOOK ||
@@ -1537,13 +1612,14 @@ static int QP_res(qp_unpacker_t * unpacker, qp_res_t * res, qp_obj_t * val)
                     *rs = tmp;
                 }
 
-                if ((rc = QP_res(unpacker, (*rs) + i, val)))
+                if ((rc = f(unpacker, (*rs) + i, val)))
                 {
-                    if (kv)
+                    if (!kv)
                     {
-                        res->via.map->n--;
+                        printf("\n\nHERE!!!\n\n");
                         QP_res_destroy(res->via.map->keys + i);
                     }
+                    res->via.map->n--;
                     return rc;
                 }
             }
