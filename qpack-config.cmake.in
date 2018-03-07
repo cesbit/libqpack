@@ -1,0 +1,8 @@
+@PACKAGE_INIT@ 
+
+set_and_check(qpack_INCLUDE_DIRS "@CMAKE_INSTALL_FULL_INCLUDEDIR@")
+set_and_check(qpack_LIBRARY_DIRS "@CMAKE_INSTALL_FULL_LIBDIR@")
+
+message(STATUS "Found libqpack: ${qpack_INCLUDE_DIRS} (found version ${qpack_VERSION})")
+
+include("${CMAKE_CURRENT_LIST_DIR}/qpack-targets.cmake")
