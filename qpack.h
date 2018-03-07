@@ -158,7 +158,7 @@ union qp_via_u
 {
     int64_t int64;
     double real;
-    const char * raw;
+    char * raw;
 };
 
 struct qp_obj_s
@@ -269,6 +269,9 @@ void qp_unpacker_init(
 
 /* step over an unpacker */
 qp_types_t qp_next(qp_unpacker_t * unpacker, qp_obj_t * qp_obj);
+
+/* step over a file */
+qp_types_t qp_fnext(FILE * f, qp_res_t * qp_res);
 
 /* unpack all */
 qp_res_t * qp_unpacker_res(qp_unpacker_t * unpacker, int * rc);
