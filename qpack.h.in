@@ -8,6 +8,7 @@
 #ifndef QPACK_H_
 #define QPACK_H_
 
+// Version numbers are configured with CMake.
 #define QP_VERSION_MAJOR @qpack_VERSION_MAJOR@
 #define QP_VERSION_MINOR @qpack_VERSION_MINOR@
 #define QP_VERSION_PATCH @qpack_VERSION_PATCH@
