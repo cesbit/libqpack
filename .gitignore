@@ -45,3 +45,12 @@
 
 # Folder for build artifacts
 [Bb]uild/
+
+# cmake        
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+qpack-config-version.cmake
+qpack-config.cmake
+qpack-targets.cmake

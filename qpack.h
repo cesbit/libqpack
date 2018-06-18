@@ -10,14 +10,14 @@
 
 // Version numbers are configured with CMake.
 #define QP_VERSION_MAJOR 0
-#define QP_VERSION_MINOR 11
-#define QP_VERSION_PATCH 0
+#define QP_VERSION_MINOR 10
+#define QP_VERSION_PATCH 7
+
+#define QP_VERSION "0.10.7"
 
 #define QP_UNPACK_FLAG_RAW 1
 #define QP_UNPACK_FLAG_KEY_STR 2
 #define QP_UNPACK_FLAG__FORCE_STR 4
-
-#define QP_VERSION "0.10.7"
 
 #include <inttypes.h>
 #include <stddef.h>
