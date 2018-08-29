@@ -8,16 +8,15 @@
 #ifndef QPACK_H_
 #define QPACK_H_
 
-// Version numbers are configured with CMake.
+/* Version numbers are configured with CMake. */
 #define QP_VERSION_MAJOR 0
-#define QP_VERSION_MINOR 10
-#define QP_VERSION_PATCH 7
+#define QP_VERSION_MINOR 11
+#define QP_VERSION_PATCH 0
 
-#define QP_VERSION "0.10.7"
+#define QP_VERSION "0.11.0"
 
 #define QP_UNPACK_FLAG_RAW 1
 #define QP_UNPACK_FLAG_KEY_STR 2
-#define QP_UNPACK_FLAG__FORCE_STR 4
 
 #include <inttypes.h>
 #include <stddef.h>
@@ -357,8 +356,11 @@ static inline int qp_fadd_double(FILE * f, double d)
     qp_sprint((packer__)->buffer, (packer__)->len)
 #define qp_unpacker_print(unpacker__) \
     qp_print((unpacker__)->start, (unpacker__)->end - (unpacker__)->start)
-#define qp_unpacker_fprint(stream__, unpacker__) \
-    qp_fprint((stream__), (unpacker__)->start, (unpacker__)->end - (unpacker__)->start)
+#define qp_unpacker_fprint(stream__, unpacker__)    \
+    qp_fprint(                                      \
+        (stream__),                                 \
+        (unpacker__)->start,                        \
+        (unpacker__)->end - (unpacker__)->start)
 #define qp_unpacker_sprint(unpacker__) \
     qp_sprint((unpacker__)->start, (unpacker__)->end - (unpacker__)->start)
 
