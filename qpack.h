@@ -21,6 +21,7 @@
 #include <inttypes.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <string.h>
 
 typedef union qp_via_u qp_via_t;
@@ -85,6 +86,9 @@ enum
     QP__ARRAY_CLOSE,     /* close array */
     QP__MAP_CLOSE,       /* close map */
 };
+
+/* default initial nest size */
+#define QP__INITIAL_NEST_SIZE 8
 
 /* enums */
 typedef enum qp_err_e
@@ -186,7 +190,7 @@ union qp_res_u
     char * str;
     int64_t int64;
     double real;
-    int boolean;
+    _Bool boolean;
     void * null;
 };
 
@@ -227,7 +231,8 @@ extern "C" {
 #endif
 
 /* create and destroy functions */
-qp_packer_t * qp_packer_create(size_t alloc_size);
+static inline qp_packer_t * qp_packer_create(size_t alloc_size);
+qp_packer_t * qp_packer_create2(size_t alloc_size, size_t init_nest_size);
 void qp_packer_destroy(qp_packer_t * packer);
 
 /* add to packer functions */
@@ -239,13 +244,18 @@ int qp_add_false(qp_packer_t * packer);
 int qp_add_null(qp_packer_t * packer);
 int qp_add_array(qp_packer_t ** packaddr);
 int qp_add_map(qp_packer_t ** packaddr);
+/* qp_add_raw_from_str() will strip off the terminiator char */
 static inline int qp_add_raw_from_str(qp_packer_t * packer, const char * str);
 
 /* Add to file-packer functions */
 int qp_fadd_raw(FILE * f, const unsigned char * raw, size_t len);
 int qp_fadd_int64(FILE * f, int64_t i);
 static inline int qp_fadd_double(FILE * f, double d);
+static inline int qp_fadd_true(FILE * f);
+static inline int qp_fadd_false(FILE * f);
+static inline int qp_fadd_null(FILE * f);
 static inline int qp_fadd_type(FILE * f, qp_types_t tp);
+/* qp_fadd_raw_from_str() will strip off the terminiator char */
 static inline int qp_fadd_raw_from_str(FILE * f, const char * str);
 
 /* close array/map functions */
@@ -253,7 +263,12 @@ int qp_close_array(qp_packer_t * packer);
 int qp_close_map(qp_packer_t * packer);
 
 /* initialize unpacker */
-void qp_unpacker_init(
+void qp_unpacker_init2(
+        qp_unpacker_t * unpacker,
+        const unsigned char * pt,
+        size_t len,
+        unsigned char flags);
+static inline void qp_unpacker_init(
         qp_unpacker_t * unpacker,
         const unsigned char * pt,
         size_t len);
@@ -269,76 +284,64 @@ qp_res_t * qp_unpacker_res(qp_unpacker_t * unpacker, int * rc);
 void qp_res_destroy(qp_res_t * res);
 int qp_res_fprint(qp_res_t * res, FILE * stream);
 
-/* test functions for qp_obj_t */
-static inline int qp_is_array(qp_types_t tp)
-{
-    return tp == QP_ARRAY_OPEN || (tp >= QP_ARRAY0 && tp <= QP_ARRAY5);
-}
-
-static inline int qp_is_map(qp_types_t tp)
-{
-    return tp == QP_MAP_OPEN || (tp >= QP_MAP0 && tp <= QP_MAP5);
-}
-
-static inline int qp_is_close(qp_types_t tp)
-{
-    return tp == QP_ARRAY_CLOSE || tp == QP_MAP_CLOSE;
-}
-
-static inline int qp_is_int(qp_types_t tp)
-{
-    return tp == QP_INT64;
-}
-
-static inline int qp_is_double(qp_types_t tp)
-{
-    return tp == QP_DOUBLE;
-}
-
-static inline int qp_is_bool(qp_types_t tp)
-{
-    return tp == QP_TRUE || tp == QP_FALSE;
-}
-
-static inline int qp_is_null(qp_types_t tp)
-{
-    return tp == QP_NULL;
-}
-
-static inline int qp_is_raw(qp_types_t tp)
-{
-    return tp == QP_RAW;
-}
-
-static inline int qp_is_raw_term(qp_obj_t * qp_obj)
-{
-    return (qp_obj->tp == QP_RAW &&
-            qp_obj->len &&
-            qp_obj->via.raw[qp_obj->len - 1] == '\0');
-}
-int qp_raw_is_equal(qp_obj_t * obj, const char * str);
+/* test functions for tp and qp_obj_t */
+static inline int qp_is_array(qp_types_t tp);
+static inline int qp_is_map(qp_types_t tp);
+static inline int qp_is_close(qp_types_t tp);
+static inline int qp_is_int(qp_types_t tp);
+static inline int qp_is_double(qp_types_t tp);
+static inline int qp_is_bool(qp_types_t tp);
+static inline int qp_is_null(qp_types_t tp);
+static inline int qp_is_raw(qp_types_t tp);
+static inline int qp_is_raw_term(qp_obj_t * obj);
+static inline int qp_is_raw_equal(qp_obj_t * obj, const char * raw, size_t n);
+/* returns true if equal to str without the terminator char */
+static inline int qp_is_raw_equal_str(qp_obj_t * obj, const char * str);
+/* DEPRECATED: use qp_is_raw_equal_str */
+static inline int qp_raw_is_equal(qp_obj_t * obj, const char * str);
 
 /* print */
 void qp_print(const unsigned char * data, size_t len);
 void qp_fprint(FILE * stream, const unsigned char * data, size_t len);
 char * qp_sprint(const unsigned char * data, size_t len);
+static inline void qp_packer_print(qp_packer_t * packer);
+static inline void qp_packer_fprint(FILE * f, qp_packer_t * packer);
+static inline char * qp_packer_sprint(qp_packer_t * packer);
+static void qp_unpacker_print(qp_unpacker_t * unpacker);
+static void qp_unpacker_fprint(FILE * f, qp_unpacker_t * unpacker);
+static inline char * qp_unpacker_sprint(qp_unpacker_t * unpacker);
 
-/* add shortcuts */
+/* misc functions */
+const char * qp_strerror(int err_code);
+const char * qp_version(void);
+
+/*
+ * definitions of static inline functions
+ */
 static inline int qp_add_raw_from_str(qp_packer_t * packer, const char * str)
 {
     return qp_add_raw(packer, (const unsigned char *) str, strlen(str));
 }
-
+static inline int qp_fadd_true(FILE * f)
+{
+    return -(fputc(QP__TRUE, f) == EOF);
+}
+static inline int qp_fadd_false(FILE * f)
+{
+    return -(fputc(QP__FALSE, f) == EOF);
+}
+static inline int qp_fadd_null(FILE * f)
+{
+    return -(fputc(QP__NULL, f) == EOF);
+}
 static inline int qp_fadd_type(FILE * f, qp_types_t tp)
 {
     return -(fputc(tp, f) == EOF);
 }
-
 static inline int qp_fadd_raw_from_str(FILE * f, const char * str)
 {
     return qp_fadd_raw(f, (const unsigned char *) str, strlen(str));
 }
-
 static inline int qp_fadd_double(FILE * f, double d)
 {
     return (d == 0.0) ? -(fputc(QP__DOUBLE_0, f) == EOF) :
@@ -347,26 +350,94 @@ static inline int qp_fadd_double(FILE * f, double d)
          -(fputc(QP__DOUBLE, f) == EOF ||
             fwrite(&d, sizeof(double), 1, f) != 1);
 }
-
-#define qp_packer_print(packer__) \
-    qp_print((packer__)->buffer, (packer__)->len)
-#define qp_packer_fprint(stream__, packer__) \
-    qp_fprint((stream__), (packer__)->buffer, (packer__)->len)
-#define qp_packer_sprint(packer__) \
-    qp_sprint((packer__)->buffer, (packer__)->len)
-#define qp_unpacker_print(unpacker__) \
-    qp_print((unpacker__)->start, (unpacker__)->end - (unpacker__)->start)
-#define qp_unpacker_fprint(stream__, unpacker__)    \
-    qp_fprint(                                      \
-        (stream__),                                 \
-        (unpacker__)->start,                        \
-        (unpacker__)->end - (unpacker__)->start)
-#define qp_unpacker_sprint(unpacker__) \
-    qp_sprint((unpacker__)->start, (unpacker__)->end - (unpacker__)->start)
-
-/* misc functions */
-const char * qp_strerror(int err_code);
-const char * qp_version(void);
+static inline void qp_packer_print(qp_packer_t * packer)
+{
+    qp_print(packer->buffer, packer->len);
+}
+static inline void qp_packer_fprint(FILE * f, qp_packer_t * packer)
+{
+    qp_fprint(f, packer->buffer, packer->len);
+}
+static inline char * qp_packer_sprint(qp_packer_t * packer)
+{
+    return qp_sprint(packer->buffer, packer->len);
+}
+static void qp_unpacker_print(qp_unpacker_t * unpacker)
+{
+    qp_print(unpacker->start, unpacker->end - unpacker->start);
+}
+static void qp_unpacker_fprint(FILE * f, qp_unpacker_t * unpacker)
+{
+    qp_fprint(f, unpacker->start, unpacker->end - unpacker->start);
+}
+static inline char * qp_unpacker_sprint(qp_unpacker_t * unpacker)
+{
+    return qp_sprint(unpacker->start, unpacker->end - unpacker->start);
+}
+static inline qp_packer_t * qp_packer_create(size_t alloc_size)
+{
+    return qp_packer_create2(alloc_size, QP__INITIAL_NEST_SIZE);
+}
+static inline void qp_unpacker_init(
+        qp_unpacker_t * unpacker,
+        const unsigned char * pt,
+        size_t len)
+{
+    return qp_unpacker_init2(unpacker, pt, len, 0);
+};
+static inline int qp_is_array(qp_types_t tp)
+{
+    return tp == QP_ARRAY_OPEN || (tp >= QP_ARRAY0 && tp <= QP_ARRAY5);
+}
+static inline int qp_is_map(qp_types_t tp)
+{
+    return tp == QP_MAP_OPEN || (tp >= QP_MAP0 && tp <= QP_MAP5);
+}
+static inline int qp_is_close(qp_types_t tp)
+{
+    return tp == QP_ARRAY_CLOSE || tp == QP_MAP_CLOSE;
+}
+static inline int qp_is_int(qp_types_t tp)
+{
+    return tp == QP_INT64;
+}
+static inline int qp_is_double(qp_types_t tp)
+{
+    return tp == QP_DOUBLE;
+}
+static inline int qp_is_bool(qp_types_t tp)
+{
+    return tp == QP_TRUE || tp == QP_FALSE;
+}
+static inline int qp_is_null(qp_types_t tp)
+{
+    return tp == QP_NULL;
+}
+static inline int qp_is_raw(qp_types_t tp)
+{
+    return tp == QP_RAW;
+}
+static inline int qp_is_raw_term(qp_obj_t * obj)
+{
+    return (obj->tp == QP_RAW &&
+            obj->len &&
+            obj->via.raw[obj->len - 1] == '\0');
+}
+static inline int qp_is_raw_equal(qp_obj_t * obj, const char * raw, size_t n)
+{
+    return (obj->tp == QP_RAW &&
+            n == obj->len &&
+            strncmp(obj->via.raw, raw, obj->len) == 0);
+}
+static inline int qp_is_raw_equal_str(qp_obj_t * obj, const char * str)
+{
+    return qp_is_raw_equal(obj, str, strlen(str));
+}
+/* DEPRECATED: use qp_is_raw_equal_str */
+static inline int qp_raw_is_equal(qp_obj_t * obj, const char * str)
+{
+    return qp_is_raw_equal_str(obj, str);
+}
 
 #ifdef __cplusplus
 }
