@@ -362,10 +362,12 @@ static inline char * qp_packer_sprint(qp_packer_t * packer)
 {
     return qp_sprint(packer->buffer, packer->len);
 }
+__attribute__((unused))
 static void qp_unpacker_print(qp_unpacker_t * unpacker)
 {
     qp_print(unpacker->start, unpacker->end - unpacker->start);
 }
+__attribute__((unused))
 static void qp_unpacker_fprint(FILE * f, qp_unpacker_t * unpacker)
 {
     qp_fprint(f, unpacker->start, unpacker->end - unpacker->start);
