@@ -244,6 +244,8 @@ int qp_add_false(qp_packer_t * packer);
 int qp_add_null(qp_packer_t * packer);
 int qp_add_array(qp_packer_t ** packaddr);
 int qp_add_map(qp_packer_t ** packaddr);
+/* qp_add_raw_from_fmt() will strip off the terminiator char */
+int qp_add_raw_from_fmt(qp_packer_t * packer, const char * fmt, ...);
 /* qp_add_raw_from_str() will strip off the terminiator char */
 static inline int qp_add_raw_from_str(qp_packer_t * packer, const char * str);
 
@@ -429,7 +431,7 @@ static inline int qp_is_raw_equal(qp_obj_t * obj, const char * raw, size_t n)
 {
     return (obj->tp == QP_RAW &&
             n == obj->len &&
-            strncmp(obj->via.raw, raw, obj->len) == 0);
+            memcmp(obj->via.raw, raw, obj->len) == 0);
 }
 static inline int qp_is_raw_equal_str(qp_obj_t * obj, const char * str)
 {

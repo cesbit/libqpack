@@ -9,6 +9,7 @@
 #include <qpack.h>
 #include <assert.h>
 #include <stdlib.h>
+#include <stdarg.h>
 
 #define QP__INITIAL_ALLOC_SZ 8
 #define QP__CHKN if (n < 0) return QP_ERR; *pt += n;
@@ -119,6 +120,7 @@ static int qp__sprint_raw(
         size_t p,
         const char * d,
         size_t n);
+static int qp__set_raw_size(qp_packer_t * packer, size_t len);
 
 qp_packer_t * qp_packer_create2(size_t alloc_size, size_t init_nest_size)
 {
@@ -175,71 +177,70 @@ const char * qp_version(void)
 
 int qp_add_raw(qp_packer_t * packer, const unsigned char * raw, size_t len)
 {
-    size_t required_size = len + 9;
+    if (qp__set_raw_size(packer, len))
+    {
+        return QP_ERR_ALLOC;
+    }
 
-    QP__RESIZE(required_size)
-
-    if (len < 100)
-    {
-        packer->buffer[packer->len++] = 128 + len;
-    }
-    else if (len <= UINT8_MAX)
-    {
-        uint8_t length = (uint8_t) len;
-        packer->buffer[packer->len++] = QP__RAW8;
-        packer->buffer[packer->len++] = length;
-    }
-    else if (len <= UINT16_MAX)
-    {
-        uint16_t length = (uint16_t) len;
-        packer->buffer[packer->len++] = QP__RAW16;
-        memcpy(packer->buffer + packer->len, &length, 2);
-        packer->len += 2;
-    }
-    else if (len <= UINT32_MAX)
-    {
-        uint32_t length = (uint32_t) len;
-        packer->buffer[packer->len++] = QP__RAW32;
-        memcpy(packer->buffer + packer->len, &length, 4);
-        packer->len += 4;
-    }
-    else
-    {
-        uint64_t length = (uint64_t) len;
-        packer->buffer[packer->len++] = QP__RAW64;
-        memcpy(packer->buffer + packer->len, &length, 8);
-        packer->len += 8;
-    }
     memcpy(packer->buffer + packer->len, raw, len);
     packer->len += len;
 
     QP__RETURN_INC_C
 }
 
+int qp_add_raw_from_fmt(qp_packer_t * packer, const char * fmt, ...)
+{
+    int len;
+    size_t orig = packer->len;
+    va_list args1, args2;
+
+    va_start(args1, fmt);
+    va_copy(args2, args1);
+    len = vsnprintf(NULL, 0, fmt, args1);
+    va_end(args1);
+
+    if (len < 0 || len > UINT32_MAX || qp__set_raw_size(packer, len))
+        return QP_ERR_ALLOC;
+
+    len = vsprintf(((char *) packer->buffer) + packer->len, fmt, args2);
+    va_end(args2);
+    if (len < 0)
+    {
+        packer->len = orig;
+        return QP_ERR_ALLOC;
+    }
+    return 0;
+}
+
 int qp_fadd_raw(FILE * f, const unsigned char * raw, size_t len)
 {
     if (len < 100)
     {
-        if (fputc(128 + len, f) == EOF) return EOF;
+        if (fputc(128 + len, f) == EOF)
+            return EOF;
     }
     else if (len <= UINT8_MAX)
     {
-        if (fputc(QP__RAW8, f) == EOF || fputc(len, f) == EOF) return EOF;
+        if (fputc(QP__RAW8, f) == EOF || fputc(len, f) == EOF)
+            return EOF;
     }
     else if (len <= UINT16_MAX)
     {
-        if (fputc(QP__RAW16, f) == EOF ||
-            fwrite(&len, sizeof(uint16_t), 1, f) != 1) return EOF;
+        if (    fputc(QP__RAW16, f) == EOF ||
+                fwrite(&len, sizeof(uint16_t), 1, f) != 1)
+            return EOF;
     }
     else if (len <= UINT32_MAX)
     {
-        if (fputc(QP__RAW32, f) == EOF ||
-            fwrite(&len, sizeof(uint32_t), 1, f) != 1) return EOF;
+        if (    fputc(QP__RAW32, f) == EOF ||
+                fwrite(&len, sizeof(uint32_t), 1, f) != 1)
+            return EOF;
     }
     else
     {
-        if (fputc(QP__RAW64, f) == EOF ||
-            fwrite(&len, sizeof(uint64_t), 1, f) != 1) return EOF;
+        if (    fputc(QP__RAW64, f) == EOF ||
+                fwrite(&len, sizeof(uint64_t), 1, f) != 1)
+            return EOF;
 
     }
     return -(fwrite(raw, len, 1, f) != 1);
@@ -2076,4 +2077,45 @@ static void qp__res_destroy(qp_res_t * res)
     default:
         break;
     }
+}
+
+static int qp__set_raw_size(qp_packer_t * packer, size_t len)
+{
+    size_t required_size = len + 9;
+
+    QP__RESIZE(required_size)
+
+    if (len < 100)
+    {
+        packer->buffer[packer->len++] = 128 + len;
+    }
+    else if (len <= UINT8_MAX)
+    {
+        uint8_t length = (uint8_t) len;
+        packer->buffer[packer->len++] = QP__RAW8;
+        packer->buffer[packer->len++] = length;
+    }
+    else if (len <= UINT16_MAX)
+    {
+        uint16_t length = (uint16_t) len;
+        packer->buffer[packer->len++] = QP__RAW16;
+        memcpy(packer->buffer + packer->len, &length, 2);
+        packer->len += 2;
+    }
+    else if (len <= UINT32_MAX)
+    {
+        uint32_t length = (uint32_t) len;
+        packer->buffer[packer->len++] = QP__RAW32;
+        memcpy(packer->buffer + packer->len, &length, 4);
+        packer->len += 4;
+    }
+    else
+    {
+        uint64_t length = (uint64_t) len;
+        packer->buffer[packer->len++] = QP__RAW64;
+        memcpy(packer->buffer + packer->len, &length, 8);
+        packer->len += 8;
+    }
+
+    return 0;
 }
