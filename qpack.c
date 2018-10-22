@@ -1,11 +1,6 @@
 /*
  * qpack.c
- *
- *  Created on: Mar 22, 2017
- *      Author: Jeroen van der Heijden <jeroen@transceptor.technology>
  */
-
-
 #include <qpack.h>
 #include <assert.h>
 #include <stdlib.h>
@@ -120,7 +115,7 @@ static int qp__sprint_raw(
         size_t p,
         const char * d,
         size_t n);
-static int qp__set_raw_size(qp_packer_t * packer, size_t len);
+static int qp__set_raw_size(qp_packer_t * packer, const size_t len);
 
 qp_packer_t * qp_packer_create2(size_t alloc_size, size_t init_nest_size)
 {
@@ -166,6 +161,9 @@ const char * qp_strerror(int err_code)
     case QP_ERR_NO_OPEN_ARRAY:  return "no array found to close";
     case QP_ERR_NO_OPEN_MAP:    return "no map found to close";
     case QP_ERR_MISSING_VALUE:  return "value is missing for the last key";
+    case QP_ERR_KEY_STR:        return \
+                                    "flag QP_UNPACK_FLAG_KEY_STR is set, "
+                                    "expecting keys to be strings";
     default:                    return "unknown error code";
     }
 }
@@ -2079,7 +2077,7 @@ static void qp__res_destroy(qp_res_t * res)
     }
 }
 
-static int qp__set_raw_size(qp_packer_t * packer, size_t len)
+static int qp__set_raw_size(qp_packer_t * packer, const size_t len)
 {
     size_t required_size = len + 9;
 

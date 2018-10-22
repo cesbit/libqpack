@@ -1,10 +1,6 @@
 /*
  * qpack.h
- *
- *  Created on: Mar 22, 2017
- *      Author: Jeroen van der Heijden <jeroen@transceptor.technology>
  */
-
 #ifndef QPACK_H_
 #define QPACK_H_
 
@@ -13,10 +9,13 @@
 #define QP_VERSION_MINOR 11
 #define QP_VERSION_PATCH 0
 
-#define QP_VERSION "0.11.0"
+#define QP_VERSION "0.11.0-alpha-0"
 
-#define QP_UNPACK_FLAG_RAW 1
-#define QP_UNPACK_FLAG_KEY_STR 2
+enum
+{
+    QP_UNPACK_FLAG_RAW      =1,
+    QP_UNPACK_FLAG_KEY_STR  =2,
+};
 
 #include <inttypes.h>
 #include <stddef.h>
