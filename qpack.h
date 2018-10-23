@@ -152,7 +152,7 @@ union qp_via_u
 {
     int64_t int64;
     double real;
-    char * raw;
+    unsigned char * raw;
 };
 
 struct qp_obj_s

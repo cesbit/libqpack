@@ -49,7 +49,7 @@ if (packer->len + LEN > packer->buffer_size)                            \
     if (qp_obj)                                                         \
     {                                                                   \
         qp_obj->tp = QP_RAW;                                            \
-        qp_obj->via.raw = (char *) unpacker->pt;                        \
+        qp_obj->via.raw = unpacker->pt;                                 \
         qp_obj->len = sz;                                               \
     }                                                                   \
     unpacker->pt += sz;                                                 \
@@ -98,7 +98,7 @@ static qp_types_t qp__print_unpacker(
         qp_types_t tp,
         qp_unpacker_t * unpacker,
         qp_obj_t * qp_obj);
-static void qp__fprint_raw(FILE * stream, const char * s, size_t n);
+static void qp__fprint_raw(FILE * stream, const unsigned char * s, size_t n);
 static int qp__res_str(qp_unpacker_t * unpacker, qp_res_t * res, qp_obj_t * val);
 static int qp__res(qp_unpacker_t * unpacker, qp_res_t * res, qp_obj_t * val);
 static void qp__res_destroy(qp_res_t * res);
@@ -763,7 +763,7 @@ qp_types_t qp_next(qp_unpacker_t * unpacker, qp_obj_t * qp_obj)
             if (qp_obj)
             {
                 qp_obj->tp = QP_RAW;
-                qp_obj->via.raw = (char *) unpacker->pt;
+                qp_obj->via.raw = unpacker->pt;
                 qp_obj->len = size;
             }
             unpacker->pt += size;
@@ -1268,7 +1268,7 @@ int qp_res_fprint(qp_res_t * res, FILE * stream)
     case QP_RES_RAW:
         if (fprintf(
                 stream, "%.*s",
-                (int) res->via.raw->n, res->via.raw->data) < 0)
+                (int) res->via.raw->n, (char *) res->via.raw->data) < 0)
         {
             return QP_ERR_WRITE_STREAM;
         }
@@ -1416,13 +1416,13 @@ char * qp_sprint(const unsigned char * data, size_t len)
     return s;
 }
 
-static void qp__fprint_raw(FILE * stream, const char * s, size_t n)
+static void qp__fprint_raw(FILE * stream, const unsigned char * s, size_t n)
 {
     size_t i;
     fputc('"', stream);
     for (i = 0; i < n; i++)
     {
-        char c = s[i];
+        char c = (char) s[i];
         switch (c)
         {
         case '"':
@@ -1696,7 +1696,7 @@ static int qp__res_str(qp_unpacker_t * unpacker, qp_res_t * res, qp_obj_t * val)
     if (val->tp != QP_RAW)
         return QP_ERR_KEY_STR;
     res->tp = QP_RES_STR;
-    res->via.str = strndup(val->via.raw, val->len);
+    res->via.str = strndup((char *) val->via.raw, val->len);
     return (res->via.str) ? 0 : QP_ERR_ALLOC;
 }
 
@@ -1725,7 +1725,7 @@ static int qp__res(qp_unpacker_t * unpacker, qp_res_t * res, qp_obj_t * val)
         }
 
         res->tp = QP_RES_STR;
-        res->via.str = strndup(val->via.raw, val->len);
+        res->via.str = strndup((char *) val->via.raw, val->len);
         return (res->via.str) ? 0 : QP_ERR_ALLOC;
     case QP_HOOK:
         /* hooks are not implemented yet */
