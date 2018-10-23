@@ -1605,7 +1605,7 @@ static qp_types_t qp__sprint_unpacker(
         n = sprintf(*pt, "%f", qp_obj->via.real); QP__CHKN
         break;
     case QP_RAW:
-        n = qp__sprint_raw(s, sz, pos, qp_obj->via.raw, qp_obj->len); QP__CHKN
+        n = qp__sprint_raw(s, sz, pos, (char *) qp_obj->via.raw, qp_obj->len); QP__CHKN
         break;
     case QP_TRUE:
         n = sprintf(*pt, "true"); QP__CHKN
