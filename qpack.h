@@ -247,6 +247,8 @@ int qp_add_map(qp_packer_t ** packaddr);
 int qp_add_raw_from_fmt(qp_packer_t * packer, const char * fmt, ...);
 /* qp_add_raw_from_str() will strip off the terminiator char */
 static inline int qp_add_raw_from_str(qp_packer_t * packer, const char * str);
+/* raw must be formatted qpack data which fits at the insert point */
+int qp_add_qp(qp_packer_t * packer, const unsigned char * raw, size_t len);
 
 /* Add to file-packer functions */
 int qp_fadd_raw(FILE * f, const unsigned char * raw, size_t len);
@@ -267,8 +269,8 @@ int qp_close_map(qp_packer_t * packer);
 void qp_unpacker_init2(
         qp_unpacker_t * unpacker,
         const unsigned char * pt,
-        size_t len,
-        unsigned char flags);
+        const size_t len,
+        const unsigned char flags);
 static inline void qp_unpacker_init(
         qp_unpacker_t * unpacker,
         const unsigned char * pt,

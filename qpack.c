@@ -244,6 +244,16 @@ int qp_fadd_raw(FILE * f, const unsigned char * raw, size_t len)
     return -(fwrite(raw, len, 1, f) != 1);
 }
 
+int qp_add_qp(qp_packer_t * packer, const unsigned char * raw, size_t len)
+{
+    QP__RESIZE(len)
+
+    memcpy(packer->buffer + packer->len, raw, len);
+    packer->len += len;
+
+    QP__RETURN_INC_C
+}
+
 int qp_add_array(qp_packer_t ** packaddr)
 {
     qp_packer_t * packer = *packaddr;
@@ -472,8 +482,8 @@ int qp_add_null(qp_packer_t * packer) QP__PLAIN_OBJ(QP__NULL)
 void qp_unpacker_init2(
         qp_unpacker_t * unpacker,
         const unsigned char * pt,
-        size_t len,
-        unsigned char flags)
+        const size_t len,
+        const unsigned char flags)
 {
     unpacker->start = pt;
     unpacker->pt = pt;
