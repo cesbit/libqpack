@@ -400,7 +400,7 @@ static inline int qp_is_map(qp_types_t tp)
 }
 static inline int qp_is_close(qp_types_t tp)
 {
-    return tp == QP_ARRAY_CLOSE || tp == QP_MAP_CLOSE;
+    return tp == QP_ARRAY_CLOSE || tp == QP_MAP_CLOSE || tp == QP_END;
 }
 static inline int qp_is_int(qp_types_t tp)
 {

@@ -473,8 +473,6 @@ int qp_add_double(qp_packer_t * packer, double d)
     QP__RETURN_INC_C
 }
 
-
-
 int qp_add_true(qp_packer_t * packer) QP__PLAIN_OBJ(QP__TRUE)
 int qp_add_false(qp_packer_t * packer) QP__PLAIN_OBJ(QP__FALSE)
 int qp_add_null(qp_packer_t * packer) QP__PLAIN_OBJ(QP__NULL)
