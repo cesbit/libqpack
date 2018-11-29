@@ -1426,18 +1426,35 @@ char * qp_sprint(const unsigned char * data, size_t len)
 
 static void qp__fprint_raw(FILE * stream, const unsigned char * s, size_t n)
 {
+    uint8_t is_printable = 1;
     size_t i;
     fputc('"', stream);
     for (i = 0; i < n; i++)
     {
-        char c = (char) s[i];
-        switch (c)
+        if (!isprint(s[i]))
         {
-        case '"':
-        case '\\':
-            fputc('\\', stream);
+            is_printable = 0;
+            break;
         }
-        fputc(c, stream);
+    }
+
+    if (!is_printable)
+    {
+        fprintf(stream, "<raw data>");
+    }
+    else
+    {
+        for (i = 0; i < n; i++)
+        {
+            char c = (char) s[i];
+            switch (c)
+            {
+            case '"':
+            case '\\':
+                fputc('\\', stream);
+            }
+            fputc(c, stream);
+        }
     }
     fputc('"', stream);
 }
