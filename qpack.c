@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <ctype.h>
 
 #define QP__INITIAL_ALLOC_SZ 8
 #define QP__CHKN if (n < 0) return QP_ERR; *pt += n;
@@ -1241,6 +1242,11 @@ void qp_res_destroy(qp_res_t * res)
 {
     qp__res_destroy(res);
     free(res);
+}
+
+void qp_res_clear(qp_res_t * res)
+{
+    qp__res_destroy(res);
 }
 
 int qp_res_fprint(qp_res_t * res, FILE * stream)

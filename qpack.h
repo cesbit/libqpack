@@ -285,6 +285,7 @@ qp_types_t qp_fnext(FILE * f, qp_res_t * qp_res);
 /* unpack all */
 qp_res_t * qp_unpacker_res(qp_unpacker_t * unpacker, int * rc);
 void qp_res_destroy(qp_res_t * res);
+void qp_res_clear(qp_res_t * res);
 int qp_res_fprint(qp_res_t * res, FILE * stream);
 
 /* test functions for tp and qp_obj_t */
