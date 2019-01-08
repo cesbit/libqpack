@@ -236,8 +236,9 @@ void qp_packer_destroy(qp_packer_t * packer);
 
 /* add to packer functions */
 int qp_add_raw(qp_packer_t * packer, const unsigned char * raw, size_t len);
-int qp_add_int64(qp_packer_t * packer, int64_t i);
+int qp_add_int(qp_packer_t * packer, int64_t i);
 int qp_add_double(qp_packer_t * packer, double d);
+int qp_add_bool(qp_packer_t * packer, _Bool b);
 int qp_add_true(qp_packer_t * packer);
 int qp_add_false(qp_packer_t * packer);
 int qp_add_null(qp_packer_t * packer);
@@ -249,17 +250,23 @@ int qp_add_raw_from_fmt(qp_packer_t * packer, const char * fmt, ...);
 static inline int qp_add_raw_from_str(qp_packer_t * packer, const char * str);
 /* raw must be formatted qpack data which fits at the insert point */
 int qp_add_qp(qp_packer_t * packer, const unsigned char * raw, size_t len);
+/* alias for backward compatibility */
+static inline int qp_add_int64(qp_packer_t * packer, int64_t i);
+
 
 /* Add to file-packer functions */
 int qp_fadd_raw(FILE * f, const unsigned char * raw, size_t len);
-int qp_fadd_int64(FILE * f, int64_t i);
+int qp_fadd_int(FILE * f, int64_t i);
 static inline int qp_fadd_double(FILE * f, double d);
+static inline int qp_fadd_bool(FILE * f, _Bool b);
 static inline int qp_fadd_true(FILE * f);
 static inline int qp_fadd_false(FILE * f);
 static inline int qp_fadd_null(FILE * f);
 static inline int qp_fadd_type(FILE * f, qp_types_t tp);
 /* qp_fadd_raw_from_str() will strip off the terminiator char */
 static inline int qp_fadd_raw_from_str(FILE * f, const char * str);
+static inline int qp_fadd_int64(FILE * f, int64_t i);
+
 
 /* close array/map functions */
 int qp_close_array(qp_packer_t * packer);
@@ -322,6 +329,10 @@ const char * qp_version(void);
 /*
  * definitions of static inline functions
  */
+static inline int qp_add_int64(qp_packer_t * packer, int64_t i)
+{
+    return qp_add_int(packer, i);
+}
 static inline int qp_add_raw_from_str(qp_packer_t * packer, const char * str)
 {
     return qp_add_raw(packer, (const unsigned char *) str, strlen(str));
@@ -346,6 +357,10 @@ static inline int qp_fadd_raw_from_str(FILE * f, const char * str)
 {
     return qp_fadd_raw(f, (const unsigned char *) str, strlen(str));
 }
+static inline int qp_fadd_int64(FILE * f, int64_t i)
+{
+    return qp_fadd_int(f, i);
+}
 static inline int qp_fadd_double(FILE * f, double d)
 {
     return (d == 0.0) ? -(fputc(QP__DOUBLE_0, f) == EOF) :
@@ -353,6 +368,10 @@ static inline int qp_fadd_double(FILE * f, double d)
          (d == -1.0) ? -(fputc(QP__DOUBLE_N1, f) == EOF) :
          -(fputc(QP__DOUBLE, f) == EOF ||
             fwrite(&d, sizeof(double), 1, f) != 1);
+}
+static inline int qp_fadd_bool(FILE * f, _Bool b)
+{
+    return -(fputc(b ? QP__TRUE: QP__FALSE, f) == EOF);
 }
 static inline void qp_packer_print(qp_packer_t * packer)
 {

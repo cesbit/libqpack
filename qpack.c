@@ -34,7 +34,7 @@ if (packer->len + LEN > packer->buffer_size)                            \
     packer->buffer = tmp;                                               \
 }
 
-#define QP__PLAIN_OBJ(QP__TYPE)                                         \
+#define QP__OBJ(QP__TYPE)                                         \
 {                                                                       \
     QP__RESIZE(1)                                                       \
     packer->buffer[packer->len++] = QP__TYPE;                           \
@@ -374,7 +374,7 @@ int qp_close_map(qp_packer_t * packer)
     return 0;
 }
 
-int qp_add_int64(qp_packer_t * packer, int64_t i)
+int qp_add_int(qp_packer_t * packer, int64_t i)
 {
     int8_t i8;
     int16_t i16;
@@ -422,7 +422,7 @@ int qp_add_int64(qp_packer_t * packer, int64_t i)
     QP__RETURN_INC_C
 }
 
-int qp_fadd_int64(FILE * f, int64_t i)
+int qp_fadd_int(FILE * f, int64_t i)
 {
     int8_t i8;
     if ((i8 = (int8_t) i) == i)
@@ -474,9 +474,10 @@ int qp_add_double(qp_packer_t * packer, double d)
     QP__RETURN_INC_C
 }
 
-int qp_add_true(qp_packer_t * packer) QP__PLAIN_OBJ(QP__TRUE)
-int qp_add_false(qp_packer_t * packer) QP__PLAIN_OBJ(QP__FALSE)
-int qp_add_null(qp_packer_t * packer) QP__PLAIN_OBJ(QP__NULL)
+int qp_add_bool(qp_packer_t * packer, _Bool b) QP__OBJ(b ? QP__TRUE:QP__FALSE)
+int qp_add_true(qp_packer_t * packer) QP__OBJ(QP__TRUE)
+int qp_add_false(qp_packer_t * packer) QP__OBJ(QP__FALSE)
+int qp_add_null(qp_packer_t * packer) QP__OBJ(QP__NULL)
 
 void qp_unpacker_init2(
         qp_unpacker_t * unpacker,
