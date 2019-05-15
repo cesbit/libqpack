@@ -9,7 +9,7 @@
 #define QP_VERSION_MINOR 11
 #define QP_VERSION_PATCH 0
 
-#define QP_VERSION "0.11.0-alpha-0"
+#define QP_VERSION "0.11.0-alpha-1"
 
 enum
 {
@@ -285,6 +285,13 @@ static inline void qp_unpacker_init(
 
 /* step over an unpacker */
 qp_types_t qp_next(qp_unpacker_t * unpacker, qp_obj_t * qp_obj);
+
+/* if the current position in the unpacker is an array or map, then the
+ * total collecion is skipped and the position is set at the end so a call
+ * to `qp_next` will return the `obect` after the collection. If the
+ * position is at anything else, this function does nothing.
+ */
+void qp_skip(qp_unpacker_t * unpacker);
 
 /* step over a file */
 qp_types_t qp_fnext(FILE * f, qp_res_t * qp_res);

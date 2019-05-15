@@ -491,6 +491,68 @@ void qp_unpacker_init2(
     unpacker->flags = flags;
 }
 
+void qp_skip(qp_unpacker_t * unpacker)
+{
+    static const qp_types_t ARRAY_CLOSE = (qp_types_t) QP__ARRAY_CLOSE;
+    static const qp_types_t MAP_CLOSE = (qp_types_t) QP__MAP_CLOSE;
+    qp_types_t tp = *unpacker->pt;
+    int count;
+
+    switch (tp)
+    {
+    case QP__ARRAY0:
+    case QP__ARRAY1:
+    case QP__ARRAY2:
+    case QP__ARRAY3:
+    case QP__ARRAY4:
+    case QP__ARRAY5:
+        count = tp - QP__ARRAY0;
+        while (count--)
+        {
+            qp_next(unpacker, NULL);
+            qp_skip(unpacker);
+        }
+        return;
+    case QP__MAP0:
+    case QP__MAP1:
+    case QP__MAP2:
+    case QP__MAP3:
+    case QP__MAP4:
+    case QP__MAP5:
+        count = (tp - QP__MAP0) * 2;
+        while (count--)
+        {
+            qp_next(unpacker, NULL);
+            qp_skip(unpacker);
+        }
+        return;
+    case QP__ARRAY_OPEN:
+        while (tp && tp != ARRAY_CLOSE)
+        {
+            tp = qp_next(unpacker, NULL);
+            qp_skip(unpacker);
+        }
+        return;
+    case QP__MAP_OPEN:
+        /* read first key or end or close */
+        tp = qp_next(unpacker, NULL);
+        qp_skip(unpacker);
+        while (tp && tp != MAP_CLOSE)
+        {
+            /* read value */
+            qp_next(unpacker, NULL);
+            qp_skip(unpacker);
+
+            /* read next key or end or close */
+            tp = qp_next(unpacker, NULL);
+            qp_skip(unpacker);
+        }
+        return;
+    default:
+        return;
+    }
+}
+
 qp_types_t qp_next(qp_unpacker_t * unpacker, qp_obj_t * qp_obj)
 {
     uint8_t tp;
