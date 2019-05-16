@@ -9,7 +9,7 @@
 #define QP_VERSION_MINOR 11
 #define QP_VERSION_PATCH 0
 
-#define QP_VERSION "0.11.0-alpha-2"
+#define QP_VERSION "0.11.0-alpha-3"
 
 enum
 {
@@ -309,6 +309,8 @@ static inline int qp_is_close(qp_types_t tp);
 static inline int qp_is_int(qp_types_t tp);
 static inline int qp_is_double(qp_types_t tp);
 static inline int qp_is_bool(qp_types_t tp);
+static inline int qp_is_true(qp_types_t tp);
+static inline int qp_is_false(qp_types_t tp);
 static inline int qp_is_null(qp_types_t tp);
 static inline int qp_is_raw(qp_types_t tp);
 static inline int qp_is_raw_term(qp_obj_t * obj);
