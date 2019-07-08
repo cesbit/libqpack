@@ -128,7 +128,7 @@ qp_packer_t * qp_packer_create2(size_t alloc_size, size_t init_nest_size)
             init_nest_size * sizeof(struct qp__nest_s));
     if (packer)
     {
-        packer->alloc_size = alloc_size;
+        packer->alloc_size = alloc_size ? alloc_size : 1;
         packer->buffer_size = alloc_size;
         packer->len = 0;
         packer->depth = 0;
