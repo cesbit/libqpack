@@ -242,7 +242,7 @@ int qp_fadd_raw(FILE * f, const unsigned char * raw, size_t len)
             return EOF;
 
     }
-    return -(fwrite(raw, len, 1, f) != 1);
+    return len ? -(fwrite(raw, len, 1, f) != 1) : 0;
 }
 
 int qp_add_qp(qp_packer_t * packer, const unsigned char * raw, size_t len)
