@@ -7,9 +7,9 @@
 /* Version numbers are configured with CMake. */
 #define QP_VERSION_MAJOR 0
 #define QP_VERSION_MINOR 11
-#define QP_VERSION_PATCH 0
+#define QP_VERSION_PATCH 2
 
-#define QP_VERSION "0.11.0-alpha-3"
+#define QP_VERSION "0.11.2-alpha-0"
 
 enum
 {
