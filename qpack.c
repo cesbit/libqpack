@@ -495,8 +495,13 @@ void qp_skip(qp_unpacker_t * unpacker)
 {
     static const qp_types_t ARRAY_CLOSE = (qp_types_t) QP__ARRAY_CLOSE;
     static const qp_types_t MAP_CLOSE = (qp_types_t) QP__MAP_CLOSE;
-    qp_types_t tp = *unpacker->pt;
+    qp_types_t tp;
     int count;
+
+    if (unpacker->pt >= unpacker->end)
+        return;
+
+    tp = *unpacker->pt;
 
     switch (tp)
     {
