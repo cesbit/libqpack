@@ -7,9 +7,9 @@
 /* Version numbers are configured with CMake. */
 #define QP_VERSION_MAJOR 0
 #define QP_VERSION_MINOR 11
-#define QP_VERSION_PATCH 3
+#define QP_VERSION_PATCH 4
 
-#define QP_VERSION "0.11.3-alpha-0"
+#define QP_VERSION "0.11.4-alpha-0"
 
 enum
 {
@@ -257,6 +257,7 @@ static inline int qp_add_int64(qp_packer_t * packer, int64_t i);
 /* Add to file-packer functions */
 int qp_fadd_raw(FILE * f, const unsigned char * raw, size_t len);
 int qp_fadd_int(FILE * f, int64_t i);
+int qp_fadd_qp(FILE * f, const unsigned char * raw, size_t len);
 static inline int qp_fadd_double(FILE * f, double d);
 static inline int qp_fadd_bool(FILE * f, _Bool b);
 static inline int qp_fadd_true(FILE * f);

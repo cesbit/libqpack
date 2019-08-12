@@ -245,6 +245,12 @@ int qp_fadd_raw(FILE * f, const unsigned char * raw, size_t len)
     return len ? -(fwrite(raw, len, 1, f) != 1) : 0;
 }
 
+int qp_fadd_qp(FILE * f, const unsigned char * raw, size_t len)
+{
+    return len ? -(fwrite(raw, len, 1, f) != 1) : 0;
+}
+
+
 int qp_add_qp(qp_packer_t * packer, const unsigned char * raw, size_t len)
 {
     QP__RESIZE(len)
@@ -491,17 +497,19 @@ void qp_unpacker_init2(
     unpacker->flags = flags;
 }
 
-void qp_skip(qp_unpacker_t * unpacker)
+static qp_types_t qp__skip(qp_unpacker_t * unpacker)
 {
     static const qp_types_t ARRAY_CLOSE = (qp_types_t) QP__ARRAY_CLOSE;
     static const qp_types_t MAP_CLOSE = (qp_types_t) QP__MAP_CLOSE;
-    qp_types_t tp;
+    qp_types_t tp, ret;
     int count;
 
     if (unpacker->pt >= unpacker->end)
-        return;
+    {
+        return QP__END;
+    }
 
-    tp = *unpacker->pt;
+    ret = tp = *unpacker->pt;
 
     switch (tp)
     {
@@ -511,51 +519,54 @@ void qp_skip(qp_unpacker_t * unpacker)
     case QP__ARRAY3:
     case QP__ARRAY4:
     case QP__ARRAY5:
+        ++unpacker->pt;
         count = tp - QP__ARRAY0;
         while (count--)
         {
-            qp_next(unpacker, NULL);
-            qp_skip(unpacker);
+            tp = qp__skip(unpacker);
         }
-        return;
+        return ret;
     case QP__MAP0:
     case QP__MAP1:
     case QP__MAP2:
     case QP__MAP3:
     case QP__MAP4:
     case QP__MAP5:
+        ++unpacker->pt;
         count = (tp - QP__MAP0) * 2;
         while (count--)
         {
-            qp_next(unpacker, NULL);
-            qp_skip(unpacker);
+            (void) qp__skip(unpacker);
         }
-        return;
+        return ret;
     case QP__ARRAY_OPEN:
+        ++unpacker->pt;
         while (tp && tp != ARRAY_CLOSE)
         {
-            tp = qp_next(unpacker, NULL);
-            qp_skip(unpacker);
+            tp = qp__skip(unpacker);
         }
-        return;
+        return ret;
     case QP__MAP_OPEN:
+        ++unpacker->pt;
         /* read first key or end or close */
-        tp = qp_next(unpacker, NULL);
-        qp_skip(unpacker);
+        tp = qp__skip(unpacker);
         while (tp && tp != MAP_CLOSE)
         {
             /* read value */
-            qp_next(unpacker, NULL);
-            qp_skip(unpacker);
+            (void) qp__skip(unpacker);
 
             /* read next key or end or close */
-            tp = qp_next(unpacker, NULL);
-            qp_skip(unpacker);
+            tp = qp__skip(unpacker);
         }
-        return;
+        return ret;
     default:
-        return;
+        return qp_next(unpacker, NULL);
     }
+}
+
+void qp_skip(qp_unpacker_t * unpacker)
+{
+    (void) qp__skip(unpacker);
 }
 
 qp_types_t qp_next(qp_unpacker_t * unpacker, qp_obj_t * qp_obj)
