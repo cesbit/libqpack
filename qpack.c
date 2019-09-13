@@ -208,7 +208,7 @@ int qp_add_raw_from_fmt(qp_packer_t * packer, const char * fmt, ...)
         packer->len = orig;
         return QP_ERR_ALLOC;
     }
-    return 0;
+    QP__RETURN_INC_C
 }
 
 int qp_fadd_raw(FILE * f, const unsigned char * raw, size_t len)

@@ -9,7 +9,7 @@
 #define QP_VERSION_MINOR 11
 #define QP_VERSION_PATCH 4
 
-#define QP_VERSION "0.11.4-alpha-0"
+#define QP_VERSION "0.11.4-alpha-1"
 
 enum
 {
