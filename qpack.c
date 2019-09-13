@@ -208,6 +208,8 @@ int qp_add_raw_from_fmt(qp_packer_t * packer, const char * fmt, ...)
         packer->len = orig;
         return QP_ERR_ALLOC;
     }
+
+    packer->len += len;
     QP__RETURN_INC_C
 }
 
