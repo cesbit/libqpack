@@ -11,9 +11,9 @@
 // Version numbers are configured with CMake.
 #define QP_VERSION_MAJOR 0
 #define QP_VERSION_MINOR 10
-#define QP_VERSION_PATCH 7
+#define QP_VERSION_PATCH 8
 
-#define QP_VERSION "0.10.7"
+#define QP_VERSION "0.10.8"
 
 #include <inttypes.h>
 #include <stddef.h>
@@ -216,7 +216,7 @@ qp_packer_t * qp_packer_create(size_t alloc_size);
 void qp_packer_destroy(qp_packer_t * packer);
 
 /* add to packer functions */
-int qp_add_raw(qp_packer_t * packer, const char * raw, size_t len);
+int qp_add_raw(qp_packer_t * packer, const void * raw, size_t len);
 int qp_add_int64(qp_packer_t * packer, int64_t i);
 int qp_add_double(qp_packer_t * packer, double d);
 int qp_add_true(qp_packer_t * packer);
@@ -232,7 +232,7 @@ int qp_close_map(qp_packer_t * packer);
 /* initialize unpacker */
 void qp_unpacker_init(
         qp_unpacker_t * unpacker,
-        const unsigned char * pt,
+        const void * pt,
         size_t len);
 
 /* step over an unpacker */
@@ -293,9 +293,9 @@ static inline int qp_is_raw_term(qp_obj_t * qp_obj)
 int qp_raw_is_equal(qp_obj_t * obj, const char * str);
 
 /* print */
-void qp_print(const unsigned char * data, size_t len);
-void qp_fprint(FILE * stream, const unsigned char * data, size_t len);
-char * qp_sprint(const unsigned char * data, size_t len);
+void qp_print(const void * data, size_t len);
+void qp_fprint(FILE * stream, const void * data, size_t len);
+char * qp_sprint(const void * data, size_t len);
 
 #define qp_packer_print(packer) \
     qp_print(packer->buffer, packer->len)
