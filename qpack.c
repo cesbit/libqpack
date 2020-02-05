@@ -99,7 +99,7 @@ static qp_types_t qp__print_unpacker(
         qp_types_t tp,
         qp_unpacker_t * unpacker,
         qp_obj_t * qp_obj);
-static void qp__fprint_raw(FILE * stream, const unsigned char * s, size_t n);
+static void qp__fprint_raw(FILE * stream, const void * raw, size_t n);
 static int qp__res_str(qp_unpacker_t * unpacker, qp_res_t * res, qp_obj_t * val);
 static int qp__res(qp_unpacker_t * unpacker, qp_res_t * res, qp_obj_t * val);
 static void qp__res_destroy(qp_res_t * res);
@@ -174,7 +174,7 @@ const char * qp_version(void)
     return QP_VERSION;
 }
 
-int qp_add_raw(qp_packer_t * packer, const unsigned char * raw, size_t len)
+int qp_add_raw(qp_packer_t * packer, const void * raw, size_t len)
 {
     if (qp__set_raw_size(packer, len))
     {
@@ -213,7 +213,7 @@ int qp_add_raw_from_fmt(qp_packer_t * packer, const char * fmt, ...)
     QP__RETURN_INC_C
 }
 
-int qp_fadd_raw(FILE * f, const unsigned char * raw, size_t len)
+int qp_fadd_raw(FILE * f, const void * raw, size_t len)
 {
     if (len < 100)
     {
@@ -247,7 +247,7 @@ int qp_fadd_raw(FILE * f, const unsigned char * raw, size_t len)
     return len ? -(fwrite(raw, len, 1, f) != 1) : 0;
 }
 
-int qp_fadd_qp(FILE * f, const unsigned char * raw, size_t len)
+int qp_fadd_qp(FILE * f, const void * raw, size_t len)
 {
     return len ? -(fwrite(raw, len, 1, f) != 1) : 0;
 }
@@ -489,7 +489,7 @@ int qp_add_null(qp_packer_t * packer) QP__OBJ(QP__NULL)
 
 void qp_unpacker_init2(
         qp_unpacker_t * unpacker,
-        const unsigned char * pt,
+        const void * pt,
         const size_t len,
         const unsigned char flags)
 {
@@ -1457,13 +1457,13 @@ qp_res_t * qp_unpacker_res(qp_unpacker_t * unpacker, int * rc)
     return res;
 }
 
-void qp_print(const unsigned char * data, size_t len)
+void qp_print(const void * data, size_t len)
 {
     qp_fprint(stdout, data, len);
     printf("\n");
 }
 
-void qp_fprint(FILE * stream, const unsigned char * data, size_t len)
+void qp_fprint(FILE * stream, const void * data, size_t len)
 {
     qp_obj_t qp_obj;
     qp_unpacker_t unpacker;
@@ -1471,7 +1471,7 @@ void qp_fprint(FILE * stream, const unsigned char * data, size_t len)
     qp__print_unpacker(stream, qp_next(&unpacker, &qp_obj), &unpacker, &qp_obj);
 }
 
-char * qp_sprint(const unsigned char * data, size_t len)
+char * qp_sprint(const void * data, size_t len)
 {
     if (!len)
     {
@@ -1511,14 +1511,15 @@ char * qp_sprint(const unsigned char * data, size_t len)
     return s;
 }
 
-static void qp__fprint_raw(FILE * stream, const unsigned char * s, size_t n)
+static void qp__fprint_raw(FILE * stream, const void * raw, size_t n)
 {
     uint8_t is_printable = 1;
+    const char * data = (const char *) raw;
     size_t i;
     fputc('"', stream);
     for (i = 0; i < n; i++)
     {
-        if (!isprint(s[i]))
+        if (!isprint(data[i]))
         {
             is_printable = 0;
             break;
@@ -1533,7 +1534,7 @@ static void qp__fprint_raw(FILE * stream, const unsigned char * s, size_t n)
     {
         for (i = 0; i < n; i++)
         {
-            char c = (char) s[i];
+            char c = (char) data[i];
             switch (c)
             {
             case '"':
