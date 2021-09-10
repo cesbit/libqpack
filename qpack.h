@@ -9,7 +9,7 @@
 #define QP_VERSION_MINOR 11
 #define QP_VERSION_PATCH 4
 
-#define QP_VERSION "0.11.4-alpha-2"
+#define QP_VERSION "0.11.4-alpha-3"
 
 enum
 {
@@ -249,7 +249,7 @@ int qp_add_raw_from_fmt(qp_packer_t * packer, const char * fmt, ...);
 /* qp_add_raw_from_str() will strip off the terminiator char */
 static inline int qp_add_raw_from_str(qp_packer_t * packer, const char * str);
 /* raw must be formatted qpack data which fits at the insert point */
-int qp_add_qp(qp_packer_t * packer, const unsigned char * raw, size_t len);
+int qp_add_qp(qp_packer_t * packer, const void * raw, size_t len);
 /* alias for backward compatibility */
 static inline int qp_add_int64(qp_packer_t * packer, int64_t i);
 
@@ -315,7 +315,7 @@ static inline int qp_is_false(qp_types_t tp);
 static inline int qp_is_null(qp_types_t tp);
 static inline int qp_is_raw(qp_types_t tp);
 static inline int qp_is_raw_term(qp_obj_t * obj);
-static inline int qp_is_raw_equal(qp_obj_t * obj, const char * raw, size_t n);
+static inline int qp_is_raw_equal(qp_obj_t * obj, const void * raw, size_t n);
 /* returns true if equal to str without the terminator char */
 static inline int qp_is_raw_equal_str(qp_obj_t * obj, const char * str);
 /* DEPRECATED: use qp_is_raw_equal_str */
@@ -466,7 +466,7 @@ static inline int qp_is_raw_term(qp_obj_t * obj)
             obj->len &&
             obj->via.raw[obj->len - 1] == '\0');
 }
-static inline int qp_is_raw_equal(qp_obj_t * obj, const char * raw, size_t n)
+static inline int qp_is_raw_equal(qp_obj_t * obj, const void * raw, size_t n)
 {
     return (obj->tp == QP_RAW &&
             n == obj->len &&

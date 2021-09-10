@@ -253,7 +253,7 @@ int qp_fadd_qp(FILE * f, const void * raw, size_t len)
 }
 
 
-int qp_add_qp(qp_packer_t * packer, const unsigned char * raw, size_t len)
+int qp_add_qp(qp_packer_t * packer, const void * raw, size_t len)
 {
     QP__RESIZE(len)
 
